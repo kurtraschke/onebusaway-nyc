@@ -184,10 +184,10 @@
 			 <h2>Try these example searches:</h2>
 			 
 			 <ul>
-			 	<li>Route: &amp;nbsp; <a href="#B63">B63</a> &amp;nbsp; <a href="#S62">S62</a> &amp;nbsp; <a href="#X1">X1</a></li>
-			 	<li>Intersection: &amp;nbsp; <a href="#Main%20St%20and%20Craig%20Ave">Main St and Craig Ave</a></li>
-			 	<li>Stop Code: &amp;nbsp; <a href="#200884">200884</a></li>
-			 	<li>Location: &amp;nbsp; <a href="#10304">10304</a> &amp;nbsp; <a href="#Hylan%20Blvd">Hylan Blvd</a></li>
+			 	<li>Route: &amp;nbsp; <s:property value="getText('main.examplesearch.route')" escapeHtml="false" /></li>
+			 	<li>Intersection: &amp;nbsp; <s:property value="getText('main.examplesearch.intersection')" escapeHtml="false" /></li>
+                                <li>Stop Code: &amp;nbsp; <s:property value="getText('main.examplesearch.stopcode')" escapeHtml="false" /></li>
+                                <li>Location: &amp;nbsp; <s:property value="getText('main.examplesearch.location')" escapeHtml="false" /></li>
 			 </ul>
 		   </div>
 		   
