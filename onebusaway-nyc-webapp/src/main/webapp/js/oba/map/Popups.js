@@ -265,13 +265,18 @@ OBA.Popups = (function() {
 				html += '<ul>';			
 
 				jQuery.each(activity.MonitoredVehicleJourney.OnwardCalls.OnwardCall, function(_, onwardCall) {
-					var stopIdParts = onwardCall.StopPointRef.split("_");
-					var stopIdWithoutAgencyId = stopIdParts[1];
-						
+                                        var stopIdParts = onwardCall.StopPointRef.split("_");
+                                        var stopIdDisplay = stopIdParts[1];
+                                        var stopIdLink;
+                                        if (OBA.Config.useAgencyId) {
+                                          stopIdLink = onwardCall.StopPointRef;
+                                        } else {
+					  stopIdLink = stopIdParts[1];
+                                        }	
 					var lastClass = ((_ === activity.MonitoredVehicleJourney.OnwardCalls.OnwardCall.length - 1) ? " last" : "");
 
 					html += '<li class="nextStop' + lastClass + '">';				
-					html += '<a href="#' + stopIdWithoutAgencyId + '">' + onwardCall.StopPointName + '</a>';
+					html += '<a href="#' + stopIdLink + '">' + onwardCall.StopPointName + '</a>';
 					html += '<span>';
 						
 					if(typeof onwardCall.ExpectedArrivalTime !== 'undefined' && onwardCall.ExpectedArrivalTime !== null) {
@@ -329,11 +334,17 @@ OBA.Popups = (function() {
 		// header
 		var stopId = stopResult.id;
 		var stopIdParts = stopId.split("_");
-		var stopIdWithoutAgency = stopIdParts[1];
-		
+		var stopIdDisplay = stopIdParts[1];
+		var stopIdLink;
+                
+                if (OBA.Config.useAgencyId) {
+                  stopIdLink = stopId;
+                } else {
+                  stopIdLink = stopIdParts[1];
+                }
 		html += '<div class="header stop">';
 		html += '<p class="title">' + stopResult.name + '</p><p>';
-		html += '<span class="type">Stopcode ' + stopIdWithoutAgency + '</span>';
+		html += '<span class="type">Stopcode ' + stopIdDisplay + '</span>'; //FIXME: should use stop code if available.
 		
 		// update time across all arrivals
 		var updateTimestampReference = OBA.Util.ISO8601StringToDate(siri.Siri.ServiceDelivery.ResponseTimestamp).getTime();
@@ -396,7 +407,7 @@ OBA.Popups = (function() {
 		jQuery.each(stopResult.routesAvailable, function(_, route) {
 	    	if (filterExistsInResults && jQuery.inArray(route.id, routeFilter) < 0) {
 	    		var filteredMatch = jQuery("<li></li>").addClass("filtered-match");
-	    		var link = jQuery('<a href="#' + stopResult.id.match(/\d*$/) + '%20' + route.shortName + '"><span class="route-name">' + route.shortName + '</span></a>');
+	    		var link = jQuery('<a href="#' + stopIdLink + '%20' + route.shortName + '"><span class="route-name">' + route.shortName + '</span></a>');
 	    		link.appendTo(filteredMatch);
 	    		filteredMatches.find("ul").append(filteredMatch);
 	    		return true; //continue
@@ -453,9 +464,9 @@ OBA.Popups = (function() {
 				html += '<ul>';
 
 				html += '<li class="route">';
-				html += '<a href="#' + stopIdWithoutAgency + '%20' + mvj.PublishedLineName + '"><span class="route-name">' + mvj.PublishedLineName + "</span>&nbsp;&nbsp; " + mvj.DestinationName + '</a>';
+				html += '<a href="#' + stopIdLink + '%20' + mvj.PublishedLineName + '"><span class="route-name">' + mvj.PublishedLineName + "</span>&nbsp;&nbsp; " + mvj.DestinationName + '</a>';
 				if (mvj.LineRef in alertData) {
-					html += ' <a id="alert-link|' + stopIdWithoutAgency + '|' + mvj.LineRef + '|' + mvj.PublishedLineName + '" class="alert-link" href="#">Alert</a>';
+					html += ' <a id="alert-link|' + stopIdLink + '|' + mvj.LineRef + '|' + mvj.PublishedLineName + '" class="alert-link" href="#">Alert</a>';
 				}
 				html += '</li>';
 
@@ -535,9 +546,9 @@ OBA.Popups = (function() {
 			var i = 0;
 			jQuery.each(routeAndDirectionWithoutArrivals, function(_, d) {
 				html += '<li class="route">';
-				html += '<a class="muted" href="#' + stopIdWithoutAgency + "%20" + d.shortName + '"><span class="route-name">' + d.shortName + "</span>&nbsp;&nbsp; " + d.destination + '</a>';
+				html += '<a class="muted" href="#' + stopIdLink + "%20" + d.shortName + '"><span class="route-name">' + d.shortName + "</span>&nbsp;&nbsp; " + d.destination + '</a>';
 				if (d.id in alertData) {
-					html += ' <a id="alert-link|' + stopIdWithoutAgency + '|' + d.id + '|' + d.shortName + '" class="alert-link" href="#">Alert</a>';
+					html += ' <a id="alert-link|' + stopIdLink + '|' + d.id + '|' + d.shortName + '" class="alert-link" href="#">Alert</a>';
 				}
 				html += '</li>';
 				
@@ -554,7 +565,7 @@ OBA.Popups = (function() {
 			var i = 0;
 			jQuery.each(routeAndDirectionWithoutSerivce, function(_, d) {
 				html += '<li class="route">';
-				html += '<a class="muted" href="#' + stopIdWithoutAgency + "%20" + d.shortName + '"><span class="route-name">' + d.shortName + '</span></a>';
+				html += '<a class="muted" href="#' + stopIdLink + "%20" + d.shortName + '"><span class="route-name">' + d.shortName + '</span></a>';
 				html += '</li>';
 				
 				i++;
@@ -564,12 +575,12 @@ OBA.Popups = (function() {
 		
 		// filtered out roues
 		if (filteredMatches.find("li").length > 0) {
-			var showAll = jQuery("<li></li>").addClass("filtered-match").html('<a href="#' + stopResult.id.match(/\d*$/) + '"><span class="route-name">See&nbsp;All</span></a>');
+			var showAll = jQuery("<li></li>").addClass("filtered-match").html('<a href="#' + stopIdLink + '"><span class="route-name">See&nbsp;All</span></a>');
 			filteredMatches.find("ul").append(showAll);
 			html += filteredMatches.html();
 		}
 
-		html += OBA.Config.infoBubbleFooterFunction("stop", stopIdWithoutAgency);	        
+		html += OBA.Config.infoBubbleFooterFunction("stop", stopIdDisplay);	        
 
 		html += "<ul class='links'>";
 		html += "<a href='#' id='zoomHere'>Center & Zoom Here</a>";

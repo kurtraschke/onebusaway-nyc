@@ -28,6 +28,7 @@ if(typeof OBA !== 'undefined' &amp;&amp; typeof OBA.Config !== 'undefined') {
 	OBA.Config.mapCenterLat=<s:property value="mapCenterLat" default="null" />;
 	OBA.Config.mapCenterLon=<s:property value="mapCenterLon" default="null" />;
 	OBA.Config.mapZoom=<s:property value="mapZoom" default="null" />;
+        OBA.Config.useAgencyId=<s:property value="useAgencyId" default="true" />;
 
 	OBA.Config.siriSMUrl = "api/siri/stop-monitoring.json?key=" + OBA.Config.obaApiKey;
 	OBA.Config.siriVMUrl = "api/siri/vehicle-monitoring.json?key=" + OBA.Config.obaApiKey;
