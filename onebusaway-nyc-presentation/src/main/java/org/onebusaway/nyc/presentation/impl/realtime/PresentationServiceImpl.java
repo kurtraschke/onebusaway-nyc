@@ -168,38 +168,6 @@ public class PresentationServiceImpl implements PresentationService {
       _log.debug("  " + statusBean.getVehicleId() + " filtered out because is not realtime.");
       return false;
     }
-
-    if(statusBean.getVehicleId() == null || statusBean.getPhase() == null) {
-      _log.debug("  " + statusBean.getVehicleId() + " filtered out because phase or vehicle id is null.");
-      return false;
-    }
-
-    if(Double.isNaN(statusBean.getDistanceAlongTrip())) {
-      _log.debug("  " + statusBean.getVehicleId() + " filtered out because D.A.T. is NaN.");
-      return false;
-    }
-
-    // TEMPORARY MTA THING FOR BX-RELEASE
-    // hide buses that are on detour from a-d queries
-    if(isOnDetour(statusBean))
-      return false;
-    
-    // not in-service
-    String phase = statusBean.getPhase();
-    if(phase != null 
-        && !phase.toUpperCase().equals("IN_PROGRESS")
-        && !phase.toUpperCase().equals("LAYOVER_BEFORE") 
-        && !phase.toUpperCase().equals("LAYOVER_DURING")) {
-      _log.debug("  " + statusBean.getVehicleId() + " filtered out because phase is not in progress.");      
-      return false;
-    }
-
-    // disabled
-    String status = statusBean.getStatus();
-    if(status != null && status.toUpperCase().equals("DISABLED")) {
-      _log.debug("  " + statusBean.getVehicleId() + " filtered out because it is disabled.");
-      return false;
-    }
     
     // old data that should be hidden
     int expiredTimeout = 
