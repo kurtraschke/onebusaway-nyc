@@ -98,8 +98,10 @@ public class SearchServiceImpl implements SearchService {
 		for (AgencyWithCoverageBean agency : _nycTransitDataService.getAgenciesWithCoverage()) {
 			for (String routeId : _nycTransitDataService.getRouteIdsForAgencyId(agency.getAgency().getId()).getList()) {
 				RouteBean routeBean = _nycTransitDataService.getRouteForId(routeId);
-				_routeShortNameToIdMap.put(routeBean.getShortName().toUpperCase(), routeId);
-				_routeLongNameToIdMap.put(routeBean.getLongName(), routeId);
+                                if (routeBean.getShortName() != null)
+                                    _routeShortNameToIdMap.put(routeBean.getShortName().toUpperCase(), routeId);
+				if (routeBean.getLongName() != null)
+                                    _routeLongNameToIdMap.put(routeBean.getLongName(), routeId);
 			}
 		}
 
