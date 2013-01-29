@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -401,9 +402,28 @@ public class SearchServiceImpl implements SearchService {
 		if (matches.size() == 1)
 			results.addMatch(resultFactory.getStopResult(matches.get(0), results.getRouteIdFilter()));
 		else {
+                    List<StopBean> candidates = new ArrayList<StopBean>();
+
 			for (StopBean match : matches) {
-				results.addSuggestion(resultFactory.getStopResult(match, results.getRouteIdFilter()));
-			}
+                            if (results.getRouteIdFilter().size() > 0) {
+                                Set<String> routeIds = new HashSet<String>();
+                                for (RouteBean route: match.getRoutes()) {
+                                    routeIds.add(route.getId());
+                                }
+
+                                if (!routeIds.containsAll(results.getRouteIdFilter())) {
+                                    continue;
+                                }
+                            }
+                            candidates.add(match);
+                        }
+                        if (candidates.size() == 1) {
+                            results.addMatch(resultFactory.getStopResult(candidates.get(0), results.getRouteIdFilter()));
+                        } else {
+                            for (StopBean stop: candidates) {
+                                results.addSuggestion(resultFactory.getStopResult(stop, results.getRouteIdFilter()));
+                            }
+                        }
 		}
 	}
 
