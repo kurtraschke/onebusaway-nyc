@@ -237,6 +237,14 @@ OBA.Sidebar = function() {
 	}
 	
 	function addRoutesToLegend(routeResults, title, filter, stopId) {
+
+                var stopIdLink;
+
+                if (OBA.Config.useAgencyId) {
+                    stopIdLink = stopId;
+                } else {
+                    stopIdLink = stopIdLink.split("_")[1];
+                }
 		
 		if (filter === null) filter = [];
 		
@@ -378,7 +386,7 @@ OBA.Sidebar = function() {
 			if (filter.length !== 0 && jQuery.inArray(routeResult.id, filter) < 0 && filterExistsInResults) {
 				
 				var filteredMatch = jQuery("<li></li>").addClass("filtered-match");
-				var link = jQuery('<a href="#' + stopId.match(/\d*$/) + '%20' + routeResult.shortName + '">' + routeResult.shortName + '</a>');
+				var link = jQuery('<a href="#' + stopIdLink + '%20' + routeResult.shortName + '">' + routeResult.shortName + '</a>');
 				
 				var allPolylines = [];
 				jQuery.each(routeResult.directions, function(_, direction) {
@@ -400,7 +408,7 @@ OBA.Sidebar = function() {
 		matches.show();
 		
 		if (filteredMatches.find("li").length > 1) {
-			var showAll = jQuery("<li></li>").addClass("filtered-match").html('<a href="#' + stopId.match(/\d*$/) + '">See&nbsp;All</a>');
+			var showAll = jQuery("<li></li>").addClass("filtered-match").html('<a href="#' + stopIdLink + '">See&nbsp;All</a>');
 			filteredMatches.find("ul").append(showAll);
 			filteredMatches.show();
 			
