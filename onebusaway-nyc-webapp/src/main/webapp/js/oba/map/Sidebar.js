@@ -466,10 +466,70 @@ OBA.Sidebar = function() {
 				});
 			}
 		});
-		
+
 		suggestions.show();
 	}
-	
+
+	// show multiple route choices to user
+	function showStopPickerList(stopResults) {
+		suggestions.find("h2").text("Did you mean?");
+
+		var resultsList = suggestions.find("ul");
+
+                var markers = [];
+
+		jQuery.each(stopResults, function(_, stop) {
+                        markers.push(routeMap.addStop(stop, null));
+
+                        var stopLink = jQuery('<a href="#' + stop.id + '"></a>')
+							.text(stop.name)
+							.attr("title", stop.name);
+
+			var listItem = jQuery("<li></li>")
+							.append(stopLink);
+
+			stopLink.click(function(e) {
+				e.preventDefault();
+
+				routeMap.showPopupForStopId(stop.id, null);
+
+				(wizard !== null)? results.triggerHandler("stop_click") : null;
+			});
+
+			stopLink.hover(function() {
+				routeMap.highlightStop(stop);
+			}, function() {
+				routeMap.unhighlightStop();
+			});
+
+			stopLink.hoverIntent({
+				over: function(e) {
+					stopLink.addClass('stopHover');
+				},
+				out: function(e) {
+					stopLink.removeClass('stopHover');
+				},
+				sensitivity: 1,
+				interval: 400
+			});
+
+			resultsList.append(listItem);
+		});
+
+                b = new google.maps.LatLngBounds();
+
+                jQuery.each(markers, function(_, marker) {
+                     b.extend(marker.getPosition())
+                });
+
+                markers[0].map.fitBounds(b);
+
+		suggestions.show();
+
+
+	}
+
+
 	function resetSearchPanelAndMap() {
 		adDiv.hide();
 		welcome.hide();
@@ -617,6 +677,12 @@ OBA.Sidebar = function() {
 						showRoutePickerList(suggestions);								
 						(wizard && wizard.enabled()) ? results.triggerHandler('route_result') : null;
 						break;
+
+                                        //a stop query with no direct matches
+
+                                        case "StopResult":
+                                                showStopPickerList(suggestions);
+                                                break;
 				}
 			}
 		});
