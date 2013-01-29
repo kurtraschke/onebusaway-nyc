@@ -268,7 +268,11 @@ public class SearchServiceImpl implements SearchService {
 
 		String normalizedQuery = normalizeQuery(results, query);
 
-		tryAsRoute(results, normalizedQuery, resultFactory);
+		tryAsExactStop(results, normalizedQuery, resultFactory);
+
+		if (results.isEmpty()) {
+                    tryAsRoute(results, normalizedQuery, resultFactory);
+		}
 
 		if (results.isEmpty() && StringUtils.isNumeric(normalizedQuery)) {
 			tryAsStop(results, normalizedQuery, resultFactory);
@@ -346,6 +350,17 @@ public class SearchServiceImpl implements SearchService {
 
 		return normalizedQuery.trim();
 	}
+
+        private void tryAsExactStop(SearchResultCollection results, String agencyAndId, SearchResultFactory resultFactory) {
+
+            try {
+              StopBean potentialStop = _nycTransitDataService.getStop(agencyAndId);
+              if (potentialStop != null)
+                results.addMatch(resultFactory.getStopResult(potentialStop, results.getRouteIdFilter()));
+            } catch (NoSuchStopServiceException e) {
+                //no-op
+            }
+        }
 
 	private void tryAsRoute(SearchResultCollection results, String routeQuery, SearchResultFactory resultFactory) {
 		if (routeQuery == null || StringUtils.isEmpty(routeQuery)) {
