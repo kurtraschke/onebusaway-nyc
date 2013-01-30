@@ -25,6 +25,9 @@ import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableSet;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -70,9 +73,9 @@ public class SearchServiceImpl implements SearchService {
 	@Autowired
 	private NycTransitDataService _nycTransitDataService;
 
-	private Map<String, String> _routeShortNameToIdMap = new HashMap<String, String>();
+	private ListMultimap<String, String> _routeShortNameToIdMap = ArrayListMultimap.create();
 
-	private Map<String, String> _routeLongNameToIdMap = new HashMap<String, String>();
+	private ListMultimap<String, String> _routeLongNameToIdMap = ArrayListMultimap.create();
 
 	private String _bundleIdForCaches = null;
 
@@ -322,7 +325,7 @@ public class SearchServiceImpl implements SearchService {
 				// or stop service
 				if ((lastItem != null && !_routeShortNameToIdMap.containsKey(lastItem))
 						|| (nextItem != null && !_routeShortNameToIdMap.containsKey(nextItem))) {
-					results.addRouteIdFilter(_routeShortNameToIdMap.get(token));
+					results.addRouteIdFilters(ImmutableSet.copyOf(_routeShortNameToIdMap.get(token)));
 					continue;
 				}
 			} else {
@@ -374,9 +377,18 @@ public class SearchServiceImpl implements SearchService {
 		}
 
 		// short name matching
-		if (_routeShortNameToIdMap.get(routeQuery) != null) {
-			RouteBean routeBean = _nycTransitDataService.getRouteForId(_routeShortNameToIdMap.get(routeQuery));
-			results.addMatch(resultFactory.getRouteResult(routeBean));
+		if (_routeShortNameToIdMap.containsKey(routeQuery)) {
+                        List<String> routes = _routeShortNameToIdMap.get(routeQuery);
+                        
+                        if (routes.size() == 1) {                        
+                            RouteBean routeBean = _nycTransitDataService.getRouteForId(routes.get(0));
+                            results.addMatch(resultFactory.getRouteResult(routeBean));
+                        } else {
+                            for (String route: routes) {
+                              RouteBean routeBean = _nycTransitDataService.getRouteForId(route);
+                              results.addSuggestion(resultFactory.getRouteResult(routeBean));
+                            }
+                        }
 		}
 
 		for (String routeShortName : _routeShortNameToIdMap.keySet()) {
@@ -389,17 +401,24 @@ public class SearchServiceImpl implements SearchService {
 
 			if (!routeQuery.equals(routeShortName)
 					&& ((routeShortName.startsWith(routeQuery) && leftOversAreDiscardable) || (routeShortName.endsWith(routeQuery) && leftOversAreDiscardable))) {
-				RouteBean routeBean = _nycTransitDataService.getRouteForId(_routeShortNameToIdMap.get(routeShortName));
-				results.addSuggestion(resultFactory.getRouteResult(routeBean));
-				continue;
+				
+                                List<String> routes = _routeShortNameToIdMap.get(routeShortName);
+                                for (String route: routes) {
+                                    RouteBean routeBean = _nycTransitDataService.getRouteForId(route);
+                                    results.addSuggestion(resultFactory.getRouteResult(routeBean));
+                                }
+                                continue;
 			}
 		}
 
 		// long name matching
 		for (String routeLongName : _routeLongNameToIdMap.keySet()) {
 			if (routeLongName.contains(routeQuery + " ") || routeLongName.contains(" " + routeQuery)) {
-				RouteBean routeBean = _nycTransitDataService.getRouteForId(_routeLongNameToIdMap.get(routeLongName));
-				results.addSuggestion(resultFactory.getRouteResult(routeBean));
+                                List<String> routes = _routeLongNameToIdMap.get(routeLongName);
+                                for (String route: routes) {
+                                    RouteBean routeBean = _nycTransitDataService.getRouteForId(route);
+                                    results.addSuggestion(resultFactory.getRouteResult(routeBean));
+                                }
 				continue;
 			}
 		}
