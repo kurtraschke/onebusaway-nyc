@@ -1,6 +1,6 @@
 package org.onebusaway.nyc.presentation.impl.search;
 
-import org.onebusaway.exceptions.NoSuchStopServiceException;
+import org.onebusaway.exceptions.ServiceException;
 import org.onebusaway.geospatial.model.CoordinateBounds;
 import org.onebusaway.geospatial.services.SphericalGeometryLibrary;
 import org.onebusaway.gtfs.model.AgencyAndId;
@@ -357,7 +357,7 @@ public class SearchServiceImpl implements SearchService {
               StopBean potentialStop = _nycTransitDataService.getStop(agencyAndId);
               if (potentialStop != null)
                 results.addMatch(resultFactory.getStopResult(potentialStop, results.getRouteIdFilter()));
-            } catch (NoSuchStopServiceException e) {
+            } catch (ServiceException e) {
                 //no-op
             }
         }
