@@ -74,10 +74,12 @@ public class SearchServiceImpl implements SearchService {
 	@Autowired
 	private NycTransitDataService _nycTransitDataService;
 
-	private ListMultimap<String, String> _routeShortNameToIdMap = ArrayListMultimap.create();
+	private ListMultimap<String, String> _routeShortNameToIdMap = ArrayListMultimap.<String, String>create();
 
-	private ListMultimap<String, String> _routeLongNameToIdMap = ArrayListMultimap.create();
+	private ListMultimap<String, String> _routeLongNameToIdMap = ArrayListMultimap.<String, String>create();
 
+        private ListMultimap<String, String> _stopCodeToIdMap = ArrayListMultimap.<String, String>create();
+        
 	private String _bundleIdForCaches = null;
 
 	// we keep an internal cache of route short/long names because if we moved
@@ -98,6 +100,7 @@ public class SearchServiceImpl implements SearchService {
 
 		_routeShortNameToIdMap.clear();
 		_routeLongNameToIdMap.clear();
+                _stopCodeToIdMap.clear();
 
 		for (AgencyWithCoverageBean agency : _nycTransitDataService.getAgenciesWithCoverage()) {
 			for (String routeId : _nycTransitDataService.getRouteIdsForAgencyId(agency.getAgency().getId()).getList()) {
@@ -107,6 +110,13 @@ public class SearchServiceImpl implements SearchService {
 				if (routeBean.getLongName() != null)
                                     _routeLongNameToIdMap.put(routeBean.getLongName(), routeId);
 			}
+
+                        for(String stopId: _nycTransitDataService.getStopIdsForAgencyId(agency.getAgency().getId()).getList()) {
+                            StopBean stop = _nycTransitDataService.getStop(stopId);
+                            if (! stop.getCode().equals(AgencyAndId.convertFromString(stopId).getId())) {
+                                _stopCodeToIdMap.put(stop.getCode(), stopId);
+                            }
+                        }
 		}
 
 		_bundleIdForCaches = currentBundleId;
@@ -275,10 +285,14 @@ public class SearchServiceImpl implements SearchService {
 		tryAsExactStop(results, normalizedQuery, resultFactory);
 
 		if (results.isEmpty()) {
-                    tryAsRoute(results, normalizedQuery, resultFactory);
+                        tryAsRoute(results, normalizedQuery, resultFactory);
 		}
 
-		if (results.isEmpty() && StringUtils.isNumeric(normalizedQuery)) {
+                if (results.isEmpty() && StringUtils.isNumeric(normalizedQuery)) {
+			tryAsStopCode(results, normalizedQuery, resultFactory);
+		}
+                
+		if (results.isEmpty()) {
 			tryAsStop(results, normalizedQuery, resultFactory);
 		}
 
@@ -359,8 +373,9 @@ public class SearchServiceImpl implements SearchService {
 
             try {
               StopBean potentialStop = _nycTransitDataService.getStop(agencyAndId);
-              if (potentialStop != null)
+              if (potentialStop != null) {
                 results.addMatch(resultFactory.getStopResult(potentialStop, results.getRouteIdFilter()));
+              }
             } catch (ServiceException e) {
                 //no-op
             }
@@ -425,8 +440,46 @@ public class SearchServiceImpl implements SearchService {
 		}
 
 	}
+        
+        private void tryAsStopCode(SearchResultCollection results, String stopQuery, SearchResultFactory resultFactory) {
+		if (stopQuery == null || StringUtils.isEmpty(stopQuery) || !StringUtils.isNumeric(stopQuery)) {
+			return;
+		}
 
-	private void tryAsStop(SearchResultCollection results, String stopQuery, SearchResultFactory resultFactory) {
+		stopQuery = stopQuery.trim();
+
+		// try to find a stop code for all known agencies
+		List<StopBean> matches = stopsForCode(stopQuery);
+
+		if (matches.size() == 1)
+			results.addMatch(resultFactory.getStopResult(matches.get(0), results.getRouteIdFilter()));
+		else {
+                    List<StopBean> candidates = new ArrayList<StopBean>();
+
+			for (StopBean match : matches) {
+                            if (results.getRouteIdFilter().size() > 0) {
+                                Set<String> routeIds = new HashSet<String>();
+                                for (RouteBean route: match.getRoutes()) {
+                                    routeIds.add(route.getId());
+                                }
+
+                                if (!routeIds.containsAll(results.getRouteIdFilter())) {
+                                    continue;
+                                }
+                            }
+                            candidates.add(match);
+                        }
+                        if (candidates.size() == 1) {
+                            results.addMatch(resultFactory.getStopResult(candidates.get(0), results.getRouteIdFilter()));
+                        } else {
+                            for (StopBean stop: candidates) {
+                                results.addSuggestion(resultFactory.getStopResult(stop, results.getRouteIdFilter()));
+                            }
+                        }
+		}
+	}
+
+    	private void tryAsStop(SearchResultCollection results, String stopQuery, SearchResultFactory resultFactory) {
 		if (stopQuery == null || StringUtils.isEmpty(stopQuery)) {
 			return;
 		}
@@ -494,6 +547,15 @@ public class SearchServiceImpl implements SearchService {
 		}
 		return matches;
 	}
+        
+        private List<StopBean> stopsForCode(String code) {
+            List<StopBean> matches = new ArrayList<StopBean>();
+            List<String> results = _stopCodeToIdMap.get(code);
+            for (String stopId: results) {
+                matches.add(_nycTransitDataService.getStop(stopId));
+            }
+            return matches;
+        }
 
 	private class StopDistanceFromPointComparator implements Comparator<StopBean> {
 
