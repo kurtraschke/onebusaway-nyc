@@ -49,4 +49,8 @@ public class StopResult implements SearchResult {
 	public List<RouteAtStop> getRoutesAvailable() {
 		return routesAvailable;
 	}
+        
+        public String getCode() {
+                return stop.getCode();
+        }
 }
