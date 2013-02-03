@@ -49,4 +49,8 @@ public class RouteResult implements SearchResult {
 	public List<RouteDirection> getDirections() {
 		return directions;
 	}
+        
+        public String getAgency() {
+                return route.getAgency().getName();
+        }
 }
