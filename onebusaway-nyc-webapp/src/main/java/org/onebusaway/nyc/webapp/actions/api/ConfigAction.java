@@ -86,4 +86,12 @@ public class ConfigAction extends OneBusAwayNYCActionSupport {
   public Integer getMapZoom() {
     return _configurationService.getConfigurationValueAsInteger("display.mapZoom", null);
   }
+  
+  public String getUseAgencyId() {
+    return _configurationService.getConfigurationValueAsString("display.useAgencyId", "false");   
+  }
+  
+  public String getShowAgencyNames() {
+    return _configurationService.getConfigurationValueAsString("display.showAgencyNames", "false");   
+  }  
 }

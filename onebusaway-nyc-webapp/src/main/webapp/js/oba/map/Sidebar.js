@@ -430,8 +430,19 @@ OBA.Sidebar = function() {
 		var resultsList = suggestions.find("ul");
 
 		jQuery.each(routeResults, function(_, route) {
-			var link = jQuery('<a href="#' + route.id + '"></a>')
-							.text(route.agency + " " + route.shortName)
+                        var routeText, routeLink;
+                        if (OBA.Config.showAgencyNames) {
+                            routeText = route.agency + " " + route.shortName;
+                        } else {
+                            routeText = route.shortName;
+                        }
+                        if (OBA.Config.useAgencyId) {
+                            routeLink = route.id;
+                        } else {
+                            routeLink = route.shortName;
+                        }
+			var link = jQuery('<a href="#' + routeLink + '"></a>')
+							.text(routeText)
 							.attr("title", route.longName);
 
 			var listItem = jQuery("<li></li>")
@@ -470,7 +481,7 @@ OBA.Sidebar = function() {
 		suggestions.show();
 	}
 
-	// show multiple route choices to user
+	// show multiple stop choices to user
 	function showStopPickerList(stopResults) {
 		suggestions.find("h2").text("Did you mean?");
 
