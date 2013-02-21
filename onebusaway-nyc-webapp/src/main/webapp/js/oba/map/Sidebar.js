@@ -237,15 +237,16 @@ OBA.Sidebar = function() {
 	}
 	
 	function addRoutesToLegend(routeResults, title, filter, stopId) {
-
                 var stopIdLink;
 
-                if (OBA.Config.useAgencyId) {
-                    stopIdLink = stopId;
-                } else {
-                    stopIdLink = stopIdLink.split("_")[1];
+                if (stopId != null) {
+                    if (OBA.Config.useAgencyId) {
+                        stopIdLink = stopId;
+                    } else {
+                        stopIdLink = stopId.split("_")[1];
+                    }
                 }
-		
+
 		if (filter === null) filter = [];
 		
 		var filterExistsInResults = false;
