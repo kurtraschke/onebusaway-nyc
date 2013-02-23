@@ -394,10 +394,6 @@ public class SearchServiceImpl implements SearchService {
 
 		routeQuery = routeQuery.toUpperCase().trim();
 
-		if (routeQuery.length() < 2) {
-			return;
-		}
-
 		// short name matching
 		if (_routeShortNameToRouteBeanMap.containsKey(routeQuery)) {
                         List<RouteBean> routes = _routeShortNameToRouteBeanMap.get(routeQuery);
