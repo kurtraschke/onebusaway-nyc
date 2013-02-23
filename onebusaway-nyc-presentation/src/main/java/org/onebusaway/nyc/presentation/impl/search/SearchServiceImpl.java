@@ -34,7 +34,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,9 +42,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * A class that constructs search results given a search result factory that is inferface specific.
+ * A class that constructs search results given a search result factory that is interface specific.
  * We need to create interface-specific models to pass into the JSP for generation of HTML.
- * 
+ *
  * @author jmaki
  *
  */
