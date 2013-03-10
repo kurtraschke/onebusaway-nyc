@@ -266,10 +266,9 @@ OBA.Popups = (function() {
 
 				jQuery.each(activity.MonitoredVehicleJourney.OnwardCalls.OnwardCall, function(_, onwardCall) {
                                         var stopIdParts = onwardCall.StopPointRef.split("_");
-                                        var stopIdDisplay = stopIdParts[1];
                                         var stopIdLink;
                                         if (OBA.Config.useAgencyId) {
-                                          stopIdLink = onwardCall.StopPointRef;
+                                          stopIdLink =  "stop:" + onwardCall.StopPointRef;
                                         } else {
 					  stopIdLink = stopIdParts[1];
                                         }	
@@ -338,7 +337,7 @@ OBA.Popups = (function() {
 		var stopIdLink;
                 
                 if (OBA.Config.useAgencyId) {
-                  stopIdLink = stopId;
+                  stopIdLink = "stop:" + stopId;
                 } else {
                   stopIdLink = stopIdParts[1];
                 }

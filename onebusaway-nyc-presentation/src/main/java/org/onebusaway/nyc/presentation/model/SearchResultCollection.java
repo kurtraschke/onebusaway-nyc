@@ -24,6 +24,8 @@ public class SearchResultCollection implements Serializable {
   
   private Double _queryLon = null;
   
+  private EExactMatchType _exactMatchType = EExactMatchType.NONE;
+  
   public void addMatch(SearchResult thing) throws IllegalArgumentException {
     if(_resultType == null) { 
       _resultType = thing.getClass();
@@ -93,5 +95,13 @@ public class SearchResultCollection implements Serializable {
 
   public void setQueryLon(Double queryLon) {
     this._queryLon = queryLon;
+  }
+
+  public EExactMatchType getExactMatchType() {
+    return this._exactMatchType; 
+ }
+  
+  public void setExactMatchType(EExactMatchType exactMatchType) {
+    this._exactMatchType = exactMatchType;
   }
 }

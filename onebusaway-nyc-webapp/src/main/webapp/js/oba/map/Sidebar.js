@@ -241,7 +241,7 @@ OBA.Sidebar = function() {
 
                 if (stopId != null) {
                     if (OBA.Config.useAgencyId) {
-                        stopIdLink = stopId;
+                        stopIdLink = "stop:" + stopId;
                     } else {
                         stopIdLink = stopId.split("_")[1];
                     }
@@ -429,6 +429,7 @@ OBA.Sidebar = function() {
 		suggestions.find("h2").text("Did you mean?");
 
 		var resultsList = suggestions.find("ul");
+                var b = new google.maps.LatLngBounds();
 
 		jQuery.each(routeResults, function(_, route) {
                         var routeText, routeLink;
@@ -438,7 +439,7 @@ OBA.Sidebar = function() {
                             routeText = route.shortName;
                         }
                         if (OBA.Config.useAgencyId) {
-                            routeLink = route.id;
+                            routeLink = "route:" + route.id;
                         } else {
                             routeLink = route.shortName;
                         }
@@ -476,8 +477,18 @@ OBA.Sidebar = function() {
 				}, function() {
 					routeMap.removeHoverPolyline();
 				});
+                                    
+                                jQuery.each(allPolylines, function(_, polyline) {
+                                        var points = google.maps.geometry.encoding.decodePath(polyline);
+
+                                        jQuery.each(points, function(_, point) {
+                                            b.extend(point);
+                                        });
+                                });
 			}
 		});
+
+                routeMap.showBounds(b);
 
 		suggestions.show();
 	}
@@ -528,16 +539,15 @@ OBA.Sidebar = function() {
 			resultsList.append(listItem);
 		});
 
-                b = new google.maps.LatLngBounds();
+                var b = new google.maps.LatLngBounds();
 
                 jQuery.each(markers, function(_, marker) {
                      b.extend(marker.getPosition())
                 });
 
-                markers[0].map.fitBounds(b);
+                routeMap.showBounds(b);
 
 		suggestions.show();
-
 
 	}
 
