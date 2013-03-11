@@ -333,7 +333,6 @@ OBA.Popups = (function() {
 		// header
 		var stopId = stopResult.id;
 		var stopIdParts = stopId.split("_");
-		var stopIdDisplay = stopIdParts[1];
 		var stopIdLink;
                 
                 if (OBA.Config.useAgencyId) {
@@ -343,7 +342,7 @@ OBA.Popups = (function() {
                 }
 		html += '<div class="header stop">';
 		html += '<p class="title">' + stopResult.name + '</p><p>';
-		html += '<span class="type">Stopcode ' + stopIdDisplay + '</span>'; //FIXME: should use stop code if available.
+		html += '<span class="type">Stopcode ' + stopResult.code + '</span>';
 		
 		// update time across all arrivals
 		var updateTimestampReference = OBA.Util.ISO8601StringToDate(siri.Siri.ServiceDelivery.ResponseTimestamp).getTime();
@@ -569,14 +568,14 @@ OBA.Popups = (function() {
 			html += '</ul>';
 		}
 		
-		// filtered out roues
+		// filtered out routes
 		if (filteredMatches.find("li").length > 0) {
 			var showAll = jQuery("<li></li>").addClass("filtered-match").html('<a href="#' + stopIdLink + '"><span class="route-name">See&nbsp;All</span></a>');
 			filteredMatches.find("ul").append(showAll);
 			html += filteredMatches.html();
 		}
 
-		html += OBA.Config.infoBubbleFooterFunction("stop", stopIdDisplay);	        
+		html += OBA.Config.infoBubbleFooterFunction("stop", stopResult.code);	        
 
 		html += "<ul class='links'>";
 		html += "<a href='#' id='zoomHere'>Center & Zoom Here</a>";
