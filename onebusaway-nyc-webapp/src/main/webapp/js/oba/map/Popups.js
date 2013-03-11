@@ -379,8 +379,8 @@ OBA.Popups = (function() {
 	    var routeAndDirectionWithArrivalsCount = 0;
 	    var routeAndDirectionWithoutArrivals = {};
 	    var routeAndDirectionWithoutArrivalsCount = 0;
-	    var routeAndDirectionWithoutSerivce = {};
-	    var routeAndDirectionWithoutSerivceCount = 0;
+	    var routeAndDirectionWithoutService = {};
+	    var routeAndDirectionWithoutServiceCount = 0;
 	    var totalRouteCount = 0;
 		
 		var filterExistsInResults = false;
@@ -410,8 +410,8 @@ OBA.Popups = (function() {
 	    	
 	    	jQuery.each(route.directions, function(__, direction) {
 	    		if(direction.hasUpcomingScheduledService === false) {
-	    			routeAndDirectionWithoutSerivce[route.id + "_" + direction.directionId] = { "id":route.id, "shortName":route.shortName, "destination":direction.destination };
-	    			routeAndDirectionWithoutSerivceCount++;
+	    			routeAndDirectionWithoutService[route.id + "_" + direction.directionId] = { "id":route.id, "shortName":route.shortName, "destination":direction.destination };
+	    			routeAndDirectionWithoutServiceCount++;
 	    		} else {
 	    			routeAndDirectionWithoutArrivals[route.id + "_" + direction.directionId + "_" + direction.destination.hashCode()] = { "id":route.id, "shortName":route.shortName, "destination":direction.destination };
 	    			routeAndDirectionWithoutArrivalsCount++;
@@ -554,12 +554,12 @@ OBA.Popups = (function() {
 			html += '</ul>';
 		}
 
-		if(routeAndDirectionWithoutSerivceCount > 0) {
+		if(routeAndDirectionWithoutServiceCount > 0) {
 			html += '<p class="service muted">No scheduled service at this time for:</p>';
 
 			html += '<ul class="no-service-routes">';
 			var i = 0;
-			jQuery.each(routeAndDirectionWithoutSerivce, function(_, d) {
+			jQuery.each(routeAndDirectionWithoutService, function(_, d) {
 				html += '<li class="route">';
 				html += '<a class="muted" href="#' + stopIdLink + "%20" + d.shortName + '"><span class="route-name">' + d.shortName + '</span></a>';
 				html += '</li>';
