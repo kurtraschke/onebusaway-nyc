@@ -31,6 +31,7 @@ if(typeof OBA !== 'undefined' &amp;&amp; typeof OBA.Config !== 'undefined') {
         OBA.Config.useAgencyId=<s:property value="useAgencyId" />;
         OBA.Config.showAgencyNames=<s:property value="showAgencyNames" />;
         OBA.Config.shortCode='<s:text name="sms.shortcode" />';
+	OBA.Config.signDefaultAgencyId='<s:text name="sign.default.agency.id" />';
 
 	OBA.Config.siriSMUrl = "api/siri/stop-monitoring.json?key=" + OBA.Config.obaApiKey;
 	OBA.Config.siriVMUrl = "api/siri/vehicle-monitoring.json?key=" + OBA.Config.obaApiKey;
