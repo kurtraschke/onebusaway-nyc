@@ -41,6 +41,10 @@ public class RouteResult implements SearchResult {
 	public String getDescription() {
 		return route.getDescription();
 	}
+        
+        public String getAgency() {
+                return route.getAgency().getName();
+        }
 
 	public String getColor() {
 		if (route.getColor() != null) {

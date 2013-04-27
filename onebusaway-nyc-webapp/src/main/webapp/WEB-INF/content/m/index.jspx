@@ -105,7 +105,12 @@
 					<c:import url="route-suggestion-picker.jspx"/>
 				</s:if>
 	
-				<!-- amigbuous address -->
+                                <!-- stop search with no direct matches -->
+                                <s:elseif test="results.resultType.equals('StopResult')">
+                                        <c:import url="stop-suggestion-picker.jspx" />
+                                </s:elseif>
+                                
+				<!-- ambiguous address -->
 				<s:elseif test="results.resultType.equals('GeocodeResult')">
 						<c:import url="geocode-result.jspx"/>
 				</s:elseif>

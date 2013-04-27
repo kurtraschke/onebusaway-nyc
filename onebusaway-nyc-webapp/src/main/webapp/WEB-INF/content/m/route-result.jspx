@@ -24,7 +24,7 @@
 	<s:iterator value="results.matches">
 		<div class="route">
 			<p class="routeHeader routeHeaderColor${color}">
-					<strong><s:property value="shortName" />&amp;nbsp;<s:property value="longName" /></strong>
+                            <strong><s:if test="%{showAgencyNames}"><s:property value="agency" />&amp;nbsp;</s:if><s:property value="shortName" />&amp;nbsp;<s:property value="longName" /></strong>
 			</p>
 
 			<p class="routeDescription">
@@ -62,6 +62,7 @@
 			<div class="directionForRoute">
 				<p class="directionTitle">
 					<strong>
+                                                <s:if test="%{showAgencyNames}"><s:property value="agency" />&amp;nbsp;</s:if>
 						<s:property value="shortName" />&amp;nbsp;to&amp;nbsp;<s:property value="destination" />
 					</strong> 
 				</p>
@@ -69,7 +70,7 @@
 				<c:choose>
 					<c:when test="${hasUpcomingScheduledService==false}">
 						<p class="noService">
-							No scheduled service for the <s:property value="shortName" /> to <s:property value="destination" /> at this time.
+							No scheduled service for the <s:if test="%{showAgencyNames}"><s:property value="agency" />&amp;nbsp;</s:if><s:property value="shortName" /> to <s:property value="destination" /> at this time.
 						</p>
 					</c:when>
 				</c:choose>
@@ -81,7 +82,12 @@
 								<c:when test="${!empty distanceAways}">
 									<s:url var="url" namespace="/m" action="index">
 										<s:param name="q">
-											<s:property value="idWithoutAgency" />
+                                                                                    <s:if test="%{useAgencyId}">
+                                        						stop:<s:property value="id" />
+                                                                                    </s:if>
+                                                                                    <s:else>
+                                                                                        <s:property value="idWithoutAgency" />
+                                                                                    </s:else>	
 										</s:param>
 									</s:url>
 									<strong>
@@ -99,7 +105,12 @@
 								<c:otherwise>
 									<s:url var="url" namespace="/m" action="index">
 										<s:param name="q">
-											<s:property value="idWithoutAgency" />
+                                                                                    <s:if test="%{useAgencyId}">
+                                        						stop:<s:property value="id" />
+                                                                                    </s:if>
+                                                                                    <s:else>
+                                                                                        <s:property value="idWithoutAgency" />
+                                                                                    </s:else>
 										</s:param>
 									</s:url>
 									<a title="${name}" href="${url}">

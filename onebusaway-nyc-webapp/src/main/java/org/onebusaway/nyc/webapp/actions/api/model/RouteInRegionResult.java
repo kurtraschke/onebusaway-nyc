@@ -29,11 +29,15 @@ public class RouteInRegionResult implements SearchResult {
 	public String getShortName() {
 		return route.getShortName();
 	}
+        
+        public String getLongName() {
+                return route.getLongName();
+        }
 
 	public String getDescription() {
 		return route.getDescription();
 	}
-
+        
 	public String getColor() {
 		if (route.getColor() != null) {
 			return route.getColor();
@@ -45,4 +49,8 @@ public class RouteInRegionResult implements SearchResult {
 	public List<String> getPolylines() {
 		return polylines;
 	}
+
+        public String getAgency() {
+                return route.getAgency().getName();
+        }
 }

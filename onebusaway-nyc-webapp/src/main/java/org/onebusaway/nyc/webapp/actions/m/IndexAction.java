@@ -284,5 +284,12 @@ public class IndexAction extends OneBusAwayNYCActionSupport {
       return null;
     }
   }
+  
+  public boolean getShowAgencyNames() {
+    return _configurationService.getConfigurationValueAsString("display.showAgencyNames", "false").equals("true");
+  }
 
+  public boolean getUseAgencyId() {
+    return _configurationService.getConfigurationValueAsString("display.useAgencyId", "false").equals("true");
+  }
 }
