@@ -78,8 +78,6 @@ public class SearchServiceImpl implements SearchService {
     private ListMultimap<String, RouteBean> _routeShortNameToRouteBeanMap = ArrayListMultimap.<String, RouteBean>create();
 
     private ListMultimap<String, RouteBean> _routeLongNameToRouteBeanMap = ArrayListMultimap.<String, RouteBean>create();
-
-    private ListMultimap<String, String> _stopCodeToIdMap = ArrayListMultimap.<String, String>create();
         
     private String _bundleIdForCaches = null;
 
@@ -101,7 +99,6 @@ public class SearchServiceImpl implements SearchService {
 
         _routeShortNameToRouteBeanMap.clear();
         _routeLongNameToRouteBeanMap.clear();
-        _stopCodeToIdMap.clear();
 
 
         for (AgencyWithCoverageBean agency : _nycTransitDataService.getAgenciesWithCoverage()) {
