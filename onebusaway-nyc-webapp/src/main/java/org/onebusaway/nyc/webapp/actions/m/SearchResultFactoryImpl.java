@@ -106,7 +106,7 @@ public class SearchResultFactoryImpl extends AbstractSearchResultFactoryImpl imp
 
         // if there are buses on route, always have "scheduled service"
         Boolean routeHasVehiclesInService = 
-      		  _realtimeService.getVehiclesInServiceForRoute(routeBean.getId(), stopGroupBean.getId());
+      		  _realtimeService.getVehiclesInServiceForRoute(routeBean.getId(), stopGroupBean.getId(), System.currentTimeMillis());
 
         if(routeHasVehiclesInService) {
       	  hasUpcomingScheduledService = true;
@@ -238,7 +238,7 @@ public class SearchResultFactoryImpl extends AbstractSearchResultFactoryImpl imp
 
     // stop visits
     List<MonitoredStopVisitStructure> visitList = _realtimeService.getMonitoredStopVisitsForStop(
-        stopBean.getId(), 0);
+        stopBean.getId(), 0, System.currentTimeMillis());
 
     for (MonitoredStopVisitStructure visit : visitList) {
       String routeId = visit.getMonitoredVehicleJourney().getLineRef().getValue();
@@ -283,7 +283,7 @@ public class SearchResultFactoryImpl extends AbstractSearchResultFactoryImpl imp
 
     // stop visits
     List<VehicleActivityStructure> journeyList = _realtimeService.getVehicleActivityForRoute(
-        routeBean.getId(), null, 0);
+        routeBean.getId(), null, 0, System.currentTimeMillis());
 
     // build map of stop IDs to list of distance strings
     for (VehicleActivityStructure journey : journeyList) {
@@ -335,7 +335,7 @@ public class SearchResultFactoryImpl extends AbstractSearchResultFactoryImpl imp
 		  String distance = distanceExtension.getPresentableDistance();
 		  
 		  double minutes = Math.floor((predictedArrival - updateTime) / 60 / 1000);
-		  String timeString = minutes + " minute" + ((Math.abs(minutes) != 1) ? "s" : "");
+		  String timeString = Math.round(minutes) + " minute" + ((Math.abs(minutes) != 1) ? "s" : "");
 				  
 		  if(progressStatus != null && progressStatus.getValue().contains("prevTrip")) {
 		    	return timeString;
