@@ -95,7 +95,6 @@
 											<s:property value="name" />
 										</a> 
 									</strong>
-									
 									<ol class="arrivalsOnRoute">
 										<c:forEach var="distanceAway" items="${distanceAways}">
 											<li>${distanceAway}</li>
@@ -118,11 +117,11 @@
 									</a> 
 								</c:otherwise>
 							</c:choose>
+							<span id="${directionId}-${idWithoutAgency}" class="anchor">&amp;</span>
 						</li>
 					</s:iterator>
 				</ul>
 			</div>
 		</s:iterator>
 	</s:iterator>
-
 </html>

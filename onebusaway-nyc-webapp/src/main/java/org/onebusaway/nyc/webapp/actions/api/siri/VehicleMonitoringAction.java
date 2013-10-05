@@ -37,6 +37,7 @@ import org.onebusaway.nyc.webapp.actions.OneBusAwayNYCActionSupport;
 import org.onebusaway.transit_data.model.ListBean;
 import org.onebusaway.transit_data.model.VehicleStatusBean;
 import org.onebusaway.transit_data_federation.services.AgencyAndIdLibrary;
+import org.onebusaway.nyc.presentation.service.cache.NycCacheService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import uk.org.siri.siri.ErrorDescriptionStructure;
@@ -47,7 +48,6 @@ import uk.org.siri.siri.ServiceDeliveryErrorConditionStructure;
 import uk.org.siri.siri.Siri;
 import uk.org.siri.siri.VehicleActivityStructure;
 import uk.org.siri.siri.VehicleMonitoringDeliveryStructure;
-
 
 @ParentPackage("onebusaway-webapp-api")
 public class VehicleMonitoringAction extends OneBusAwayNYCActionSupport
@@ -76,6 +76,9 @@ public class VehicleMonitoringAction extends OneBusAwayNYCActionSupport
   // respect an HTTP Accept: header.
   private String _type = "xml";
 
+  @Autowired
+  private NycCacheService<Integer, Siri> _cacheService;
+  
   private MonitoringActionSupport _monitoringActionSupport = new MonitoringActionSupport();
   
   public void setType(String type) {
@@ -226,24 +229,30 @@ public class VehicleMonitoringAction extends OneBusAwayNYCActionSupport
       
       gaLabel = "All Vehicles";
       
+      int hashKey = _cacheService.hash(maximumOnwardCalls, agencyIds);
+      
       List<VehicleActivityStructure> activities = new ArrayList<VehicleActivityStructure>();
-      
-      for (String agency : agencyIds) {
-        ListBean<VehicleStatusBean> vehicles = _nycTransitDataService.getAllVehiclesForAgency(
-            agency, currentTimestamp);
-
-        for (VehicleStatusBean v : vehicles.getList()) {
-          VehicleActivityStructure activity = _realtimeService.getVehicleActivityForVehicle(
-              v.getVehicleId(), maximumOnwardCalls, currentTimestamp);
-
-          if (activity != null) {
-            activities.add(activity);
-          }
-        }
-      }
-      
-      // There is no input (route id) to validate, so pass null error
-      _response = generateSiriResponse(activities, null, null, currentTimestamp);
+      if (!_cacheService.containsKey(hashKey)){
+	    for (String agency : agencyIds) {
+	      ListBean<VehicleStatusBean> vehicles = _nycTransitDataService.getAllVehiclesForAgency(
+	          agency, currentTimestamp);
+	
+	      for (VehicleStatusBean v : vehicles.getList()) {
+	        VehicleActivityStructure activity = _realtimeService.getVehicleActivityForVehicle(
+	            v.getVehicleId(), maximumOnwardCalls, currentTimestamp);
+	
+	        if (activity != null) {
+	          activities.add(activity);
+	        }
+	      }
+	    }
+	    // There is no input (route id) to validate, so pass null error
+	    _response = generateSiriResponse(activities, null, null, currentTimestamp);
+	    _cacheService.store(hashKey, _response);
+	  }
+	  else {
+		  _response = _cacheService.retrieve(hashKey);
+	  }
     }
     
     _monitoringActionSupport.reportToGoogleAnalytics(_request, "Vehicle Monitoring", gaLabel, _configurationService);
@@ -339,5 +348,4 @@ public class VehicleMonitoringAction extends OneBusAwayNYCActionSupport
   public HttpServletResponse getServletResponse(){
     return _servletResponse;
   }
-
 }

@@ -11,7 +11,7 @@ import org.onebusaway.nyc.admin.search.impl.DSCFilter;
 import org.onebusaway.nyc.admin.search.impl.DepotFilter;
 import org.onebusaway.nyc.admin.search.impl.EmergencyStatusFilter;
 import org.onebusaway.nyc.admin.search.impl.FormalInferrenceFilter;
-import org.onebusaway.nyc.admin.search.impl.InferredStateFilter;
+import org.onebusaway.nyc.admin.search.impl.InferredPhaseFilter;
 import org.onebusaway.nyc.admin.search.impl.PulloutStatusFilter;
 import org.onebusaway.nyc.admin.search.impl.RevenueServiceFilter;
 import org.onebusaway.nyc.admin.search.impl.RouteFilter;
@@ -128,9 +128,9 @@ public class VehicleSearchServiceImpl implements VehicleSearchService {
 		if(StringUtils.isNotBlank(route)) {
 			filters.add(new RouteFilter(route));
 		}
-		String inferredState = searchParameters.get(VehicleSearchParameters.INFERRED_STATE);
-		if(!inferredState.equalsIgnoreCase("All")) {
-			filters.add(new InferredStateFilter(inferredState));
+		String inferredPhase = searchParameters.get(VehicleSearchParameters.INFERRED_PHASE);
+		if(!inferredPhase.equalsIgnoreCase("All")) {
+			filters.add(new InferredPhaseFilter(inferredPhase));
 		}
 		String dsc = searchParameters.get(VehicleSearchParameters.DSC);
 		if(StringUtils.isNotBlank(dsc)) {

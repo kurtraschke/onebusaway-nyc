@@ -110,8 +110,16 @@ public class MtaUtsVehiclePullInPullOut extends MtaUtsObject {
 
   private void setBusNumberFromString(String busNumStr) {
     try {
-      busNumber = Long.parseLong(busNumStr);
-    } catch (NumberFormatException nfea) {
+	  String numStr = busNumStr.trim();
+	  for (int i=0; i < numStr.length(); i++){
+	    if(!Character.isDigit(numStr.charAt(i))){
+	      numStr=numStr.substring(0, i);
+	      break;
+	    }
+      }
+      busNumber = Long.parseLong(numStr);
+    }
+    catch (NumberFormatException nfea) {
       busNumber = new Long(-1);
     }
   }

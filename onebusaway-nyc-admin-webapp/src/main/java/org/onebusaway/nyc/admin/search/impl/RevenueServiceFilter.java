@@ -14,9 +14,9 @@ public class RevenueServiceFilter implements Filter<VehicleStatus> {
 
 	@Override
 	public boolean apply(VehicleStatus type) {
-		if(StringUtils.isNotBlank(type.getInferredState())) {
-			if(type.getInferredState().equalsIgnoreCase("IN PROGRESS") ||
-					type.getInferredState().startsWith("LAY")) {
+		if(StringUtils.isNotBlank(type.getInferredPhase())) {
+			if(type.getInferredPhase().equalsIgnoreCase("IN PROGRESS") ||
+					type.getInferredPhase().startsWith("LAY")) {
 				return true;
 			}
 		}

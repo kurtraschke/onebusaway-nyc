@@ -23,8 +23,6 @@ import org.onebusaway.nyc.integration_tests.vehicle_tracking_webapp.AbstractTrac
  * and a bad/detoured start, as well as no DSC!
  */
 
-// disabled per Mike, for now.
-@Ignore
 public class Trace_6154_20111214_123000_143500_no_dsc_IntegrationTest extends AbstractTraceRunner {
 
   public Trace_6154_20111214_123000_143500_no_dsc_IntegrationTest() throws Exception {

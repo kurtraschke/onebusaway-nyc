@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,7 +17,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.json.JSONArray;
 import org.json.JSONException;
 
-import org.onebusaway.nyc.admin.comparator.InferredStateComparator;
+import org.onebusaway.nyc.admin.comparator.InferredPhaseComparator;
 import org.onebusaway.nyc.admin.comparator.LastUpdateComparator;
 import org.onebusaway.nyc.admin.comparator.ObservedDSCComparator;
 import org.onebusaway.nyc.admin.comparator.PullinTimeComparator;
@@ -43,6 +44,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.remoting.RemoteConnectFailureException;
 import org.springframework.stereotype.Component;
 
+
 /**
  * Default implementation of {@link VehicleStatusService}
  * @author abelsare
@@ -61,6 +63,34 @@ public class VehicleStatusServiceImpl implements VehicleStatusService {
 	private final ObjectMapper mapper = new ObjectMapper();
 	private final VehicleStatusCache cache = new VehicleStatusCache();
 	
+	private int lastJsonHash;
+	private Map<String, VehiclePullout> pullouts = new ConcurrentHashMap<String, VehiclePullout>();
+
+	private class UpdateThread implements Runnable {
+		String json;
+		public UpdateThread(String json){
+			log.debug("Update thread running!");
+			this.json=json;
+		}
+	    @Override
+	    public synchronized void run() {
+			try {
+				JSONArray pulloutContentArray = new JSONArray("[" +json + "]");
+				for(int i=0; i<pulloutContentArray.length(); i++) {
+					VehiclePullout pullout = convertToObject(pulloutContentArray.getString(i), VehiclePullout.class);
+					//pullout can be null if no data is returned by web service call
+					if(pullout !=null) {
+						pullouts.put(pullout.getVehicleId(), pullout);
+					}
+				}
+			} catch (JSONException e) {
+				log.error("Error parsing json content : " +e);
+				e.printStackTrace();
+			}
+	    }
+	}
+	
+	  
 	@Override
 	public List<VehicleStatus> getVehicleStatus(boolean loadNew) {
 		
@@ -164,8 +194,8 @@ public class VehicleStatusServiceImpl implements VehicleStatusService {
 				fieldComparator = new LastUpdateComparator(order);
 				break;
 			
-			case INFERREDSTATE :
-				fieldComparator = new InferredStateComparator(order);
+			case INFERREDPHASE :
+				fieldComparator = new InferredPhaseComparator(order);
 				break;
 				
 			case OBSERVEDDSC :
@@ -189,51 +219,22 @@ public class VehicleStatusServiceImpl implements VehicleStatusService {
 	
 	private Map<String, VehiclePullout> getPulloutData() {
 		String tdmHost = System.getProperty("tdm.host");
-		Map<String, VehiclePullout> pullouts = new HashMap<String, VehiclePullout>();
-
 		String url = buildURL(tdmHost, "/pullouts/list");
 		log.debug("making request for : " +url);
 
 		String vehiclePipocontent = remoteConnectionService.getContent(url);
 
 		String json = extractJsonArrayString(vehiclePipocontent);
-		
-		try {
-			JSONArray pulloutContentArray = new JSONArray("[" +json + "]");
-			for(int i=0; i<pulloutContentArray.length(); i++) {
-				VehiclePullout pullout = convertToObject(pulloutContentArray.getString(i), VehiclePullout.class);
-				//pullout can be null if no data is returned by web service call
-				if(pullout !=null) {
-					pullouts.put(pullout.getVehicleId(), pullout);
-				}
-			}
-		} catch (JSONException e) {
-			log.error("Error parsing json content : " +e);
-			e.printStackTrace();
+		if(json!=null && json.hashCode()!=lastJsonHash){
+			lastJsonHash=json.hashCode();
+			new UpdateThread(json).run();
 		}
-		
+		else log.debug("Constructing pullout map was skipped!");
 		return pullouts;
 	}
 
 	private VehiclePullout getPulloutData(String vehicleId) {
-		String tdmHost = System.getProperty("tdm.host");
-		VehiclePullout pullout = null;
-
-		String url = buildURL(tdmHost, "/pullouts/" +  vehicleId + "/list");
-		log.debug("making request for : " +url);
-
-		String vehiclePipocontent = remoteConnectionService.getContent(url);
-
-		String json = extractJsonArrayString(vehiclePipocontent);
-		
-		try {
-				pullout = convertToObject(json, VehiclePullout.class);
-		} catch (Exception e) {
-			log.error("Error parsing json content : " +e);
-			e.printStackTrace();
-		}
-		
-		return pullout;
+		return pullouts.get(vehicleId);
 	}
 
 	private List<VehicleLastKnownRecord> getLastKnownRecordData() {
@@ -313,11 +314,12 @@ public class VehicleStatusServiceImpl implements VehicleStatusService {
 	}
 
   private String getHeadSign(String dsc) {
+	    if (dsc==null) {
+	      return null;
+	    }
 		String tdmHost = System.getProperty("tdm.host");
-		
 		String url = buildURL(tdmHost, "/dsc/" +  dsc + "/sign");
 		log.debug("making request for : " +url);
-
 		try {
 		  String headSignContent = remoteConnectionService.getContent(url);
 		  if (headSignContent == null) { return null;}
@@ -342,9 +344,7 @@ public class VehicleStatusServiceImpl implements VehicleStatusService {
 	private <T> T convertToObject(String content, Class<T> objectType) {
 		T object = null;
 		try {
-		  log.error("objectType=" + objectType.toString() + ":CONTENT:" + content);
 			object = mapper.readValue(content, objectType);
-
 		} catch (JsonParseException e) {
 			log.error("Error parsing json content : " +e);
 			e.printStackTrace();
