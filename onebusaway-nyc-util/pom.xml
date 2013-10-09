@@ -12,6 +12,7 @@
   <packaging>jar</packaging>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <aspectj-version>1.7.3</aspectj-version>
   </properties>
   <dependencies>
     <dependency>
@@ -37,6 +38,16 @@
     	<groupId>org.onebusaway</groupId>
     	<artifactId>onebusaway-container</artifactId>
     	<version>${onebusaway.app-modules.version}</version>
+        <exclusions>
+            <exclusion>
+                <groupId>org.aspectj</groupId>
+                <artifactId>aspectjrt</artifactId>
+            </exclusion>
+            <exclusion>
+                <groupId>org.aspectj</groupId>
+                <artifactId>aspectjweaver</artifactId>
+            </exclusion>
+        </exclusions>
     </dependency>
     <dependency>
     	<groupId>org.mockito</groupId>
@@ -47,6 +58,19 @@
       <artifactId>commons-compress</artifactId>
       <version>1.2</version>
     </dependency>
+    
+    <dependency>
+      <groupId>org.aspectj</groupId>
+      <artifactId>aspectjrt</artifactId>
+      <version>${aspectj-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.aspectj</groupId>
+      <artifactId>aspectjweaver</artifactId>
+      <version>${aspectj-version}</version>
+    </dependency>
+
+    
   </dependencies>
   
   <profiles>
