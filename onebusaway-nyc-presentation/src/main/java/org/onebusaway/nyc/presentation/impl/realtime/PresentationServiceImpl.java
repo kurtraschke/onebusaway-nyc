@@ -163,7 +163,7 @@ public class PresentationServiceImpl implements PresentationService {
 
     _log.debug(statusBean.getVehicleId() + " running through filter: ");
     
-    // hide non-realtime
+    /*// hide non-realtime
     if(statusBean.isPredicted() == false) {
       _log.debug("  " + statusBean.getVehicleId() + " filtered out because is not realtime.");
       return false;
@@ -176,7 +176,7 @@ public class PresentationServiceImpl implements PresentationService {
     if (getTime() - statusBean.getLastUpdateTime() >= 1000 * expiredTimeout) {
       _log.debug("  " + statusBean.getVehicleId() + " filtered out because data is expired.");
       return false;
-    }
+    }*/
 
     return true;
   }

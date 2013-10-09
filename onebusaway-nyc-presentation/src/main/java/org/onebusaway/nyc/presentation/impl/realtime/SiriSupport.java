@@ -103,21 +103,47 @@ public final class SiriSupport {
 		routeShortName.setValue(framedJourneyTripBean.getRoute().getShortName());
 		monitoredVehicleJourney.setPublishedLineName(routeShortName);
 
-		JourneyPatternRefStructure journeyPattern = new JourneyPatternRefStructure();
-		journeyPattern.setValue(framedJourneyTripBean.getShapeId());
-		monitoredVehicleJourney.setJourneyPatternRef(journeyPattern);
-
+                if (framedJourneyTripBean.getShapeId() != null) {
+		    JourneyPatternRefStructure journeyPattern = new JourneyPatternRefStructure();
+		    journeyPattern.setValue(framedJourneyTripBean.getShapeId());
+		    monitoredVehicleJourney.setJourneyPatternRef(journeyPattern);
+                }
+                
 		NaturalLanguageStringStructure headsign = new NaturalLanguageStringStructure();
 		headsign.setValue(framedJourneyTripBean.getTripHeadsign());
 		monitoredVehicleJourney.setDestinationName(headsign);
 
-		VehicleRefStructure vehicleRef = new VehicleRefStructure();
+                if (currentVehicleTripStatus.isPredicted()) {
+
+                    		VehicleRefStructure vehicleRef = new VehicleRefStructure();
 		vehicleRef.setValue(currentVehicleTripStatus.getVehicleId());
 		monitoredVehicleJourney.setVehicleRef(vehicleRef);
 
+
+                		monitoredVehicleJourney.setBearing((float)currentVehicleTripStatus.getOrientation());
+
+                                		// location
+		// if vehicle is detected to be on detour, use actual lat/lon, not snapped location.
+		LocationStructure location = new LocationStructure();
+
+		DecimalFormat df = new DecimalFormat();
+		df.setMaximumFractionDigits(6);
+//currentVehicleTripStatus.getLastKnownLocation() != null
+//		if (presentationService.isOnDetour(currentVehicleTripStatus)) {
+			location.setLatitude(new BigDecimal(df.format(currentVehicleTripStatus.getLastKnownLocation().getLat())));
+			location.setLongitude(new BigDecimal(df.format(currentVehicleTripStatus.getLastKnownLocation().getLon())));
+//		} else {
+//			location.setLatitude(new BigDecimal(df.format(currentVehicleTripStatus.getLocation().getLat())));
+//			location.setLongitude(new BigDecimal(df.format(currentVehicleTripStatus.getLocation().getLon())));
+//		}
+
+		monitoredVehicleJourney.setVehicleLocation(location);
+
+                }
+                
+
 		monitoredVehicleJourney.setMonitored(currentVehicleTripStatus.isPredicted());
 
-		monitoredVehicleJourney.setBearing((float)currentVehicleTripStatus.getOrientation());
 
 		monitoredVehicleJourney.setProgressRate(getProgressRateForPhaseAndStatus(
 				currentVehicleTripStatus.getStatus(), currentVehicleTripStatus.getPhase()));
@@ -150,22 +176,6 @@ public final class SiriSupport {
 		framedJourney.setDatedVehicleJourneyRef(framedJourneyTripBean.getId());
 		monitoredVehicleJourney.setFramedVehicleJourneyRef(framedJourney);
 
-		// location
-		// if vehicle is detected to be on detour, use actual lat/lon, not snapped location.
-		LocationStructure location = new LocationStructure();
-
-		DecimalFormat df = new DecimalFormat();
-		df.setMaximumFractionDigits(6);
-
-		if (presentationService.isOnDetour(currentVehicleTripStatus)) {
-			location.setLatitude(new BigDecimal(df.format(currentVehicleTripStatus.getLastKnownLocation().getLat())));
-			location.setLongitude(new BigDecimal(df.format(currentVehicleTripStatus.getLastKnownLocation().getLon())));
-		} else {
-			location.setLatitude(new BigDecimal(df.format(currentVehicleTripStatus.getLocation().getLat())));
-			location.setLongitude(new BigDecimal(df.format(currentVehicleTripStatus.getLocation().getLon())));
-		}
-
-		monitoredVehicleJourney.setVehicleLocation(location);
 
 		// progress status
 		List<String> progressStatuses = new ArrayList<String>();
@@ -186,11 +196,11 @@ public final class SiriSupport {
 		}
 
 		// block ref
-		if (presentationService.isBlockLevelInference(currentVehicleTripStatus)) {
+		//if (presentationService.isBlockLevelInference(currentVehicleTripStatus)) {
 			BlockRefStructure blockRef = new BlockRefStructure();
 			blockRef.setValue(framedJourneyTripBean.getBlockId());
 			monitoredVehicleJourney.setBlockRef(blockRef);
-		}
+		//}
 
 		// scheduled depature time
 		if (presentationService.isBlockLevelInference(currentVehicleTripStatus) 
@@ -237,12 +247,12 @@ public final class SiriSupport {
 		}
 		
 		// monitored call
-		if(!presentationService.isOnDetour(currentVehicleTripStatus))
+		//if(!presentationService.isOnDetour(currentVehicleTripStatus))
 			fillMonitoredCall(monitoredVehicleJourney, blockInstance, currentVehicleTripStatus, monitoredCallStopBean, 
 				presentationService, nycTransitDataService, stopIdToPredictionRecordMap, responseTimestamp);
 
 		// onward calls
-		if(!presentationService.isOnDetour(currentVehicleTripStatus))
+		//if(!presentationService.isOnDetour(currentVehicleTripStatus))
 			fillOnwardCalls(monitoredVehicleJourney, blockInstance, framedJourneyTripBean, currentVehicleTripStatus, onwardCallsMode,
 				presentationService, nycTransitDataService, stopIdToPredictionRecordMap, maximumOnwardCalls, responseTimestamp);
 
@@ -361,7 +371,7 @@ public final class SiriSupport {
 
 			if(!foundActiveTrip) {
 				if(tripStatus.getActiveTrip().getId().equals(blockTrip.getTrip().getId())) {
-					distanceOfVehicleAlongBlock += tripStatus.getDistanceAlongTrip();
+					distanceOfVehicleAlongBlock += tripStatus.isPredicted() ? tripStatus.getDistanceAlongTrip() : tripStatus.getScheduledDistanceAlongTrip();
 
 					foundActiveTrip = true;
 				} else {
@@ -398,7 +408,7 @@ public final class SiriSupport {
 
 				// monitored call
 				if(stopTime.getStopTime().getStop().getId().equals(monitoredCallStopBean.getId())) {    
-					if(!presentationService.isOnDetour(tripStatus)) {
+					//if(!presentationService.isOnDetour(tripStatus)) {
 						monitoredVehicleJourney.setMonitoredCall(
 								getMonitoredCallStructure(stopTime.getStopTime().getStop(), presentationService, 
 										stopTime.getDistanceAlongBlock() - blockTrip.getDistanceAlongBlock(), 
@@ -406,7 +416,7 @@ public final class SiriSupport {
 										visitNumber, blockTripStopsAfterTheVehicle - 1,
 										stopLevelPredictions.get(stopTime.getStopTime().getStop().getId()),
 										responseTimestamp));
-					}
+					//}
 
 					// we found our monitored call--stop
 					return;
@@ -496,19 +506,23 @@ public final class SiriSupport {
 
 		if(prediction != null) {
 			// do not allow predicted times to be less than ResponseTimestamp
-			if (prediction.getTimepointPredictedTime() < responseTimestamp) {
+			//if (prediction.getTimepointPredictedTime() < responseTimestamp) {
 				/*
 				 * monitoredCall has less precision than onwardCall (date vs. timestamp)
 				 * which results in a small amount of error when converting back to timestamp.
 				 * Add a second here to prevent negative values from showing up in the UI 
 				 * (actual precision of the value is 1 minute, so a second has little influence)
 				 */
-				monitoredCallStructure.setExpectedArrivalTime(new Date(responseTimestamp + 1000)); 
-				monitoredCallStructure.setExpectedDepartureTime(new Date(responseTimestamp + 1000));
-			} else {
+			//	monitoredCallStructure.setExpectedArrivalTime(new Date(responseTimestamp + 1000)); 
+			//	monitoredCallStructure.setExpectedDepartureTime(new Date(responseTimestamp + 1000));
+			//} else {
+                    if (prediction.getTimepointPredictedTime() > 0) {
 				monitoredCallStructure.setExpectedArrivalTime(new Date(prediction.getTimepointPredictedTime()));
 				monitoredCallStructure.setExpectedDepartureTime(new Date(prediction.getTimepointPredictedTime()));
-			}
+                    }
+                                monitoredCallStructure.setAimedArrivalTime(new Date(prediction.getTimepointScheduledTime()));
+                                monitoredCallStructure.setAimedDepartureTime(new Date(prediction.getTimepointScheduledTime()));
+			//}
 			
 		}
 		

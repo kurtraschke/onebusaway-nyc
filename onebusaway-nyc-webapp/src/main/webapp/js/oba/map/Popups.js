@@ -479,7 +479,12 @@ OBA.Popups = (function() {
 							timePrediction = OBA.Util.getArrivalEstimateForISOString(
 									monitoredVehicleJourney.MonitoredCall.ExpectedArrivalTime, 
 									updateTimestampReference);
-						}
+						} else if(typeof monitoredVehicleJourney.MonitoredCall.AimedArrivalTime !== 'undefined' 
+							&& monitoredVehicleJourney.MonitoredCall.AimedArrivalTime !== null) {
+							timePrediction = OBA.Util.getArrivalEstimateForISOString(
+									monitoredVehicleJourney.MonitoredCall.AimedArrivalTime, 
+									updateTimestampReference);
+                                                }
 
 						var wrapped = false;
 						if(typeof monitoredVehicleJourney.ProgressStatus !== 'undefined' 
@@ -506,7 +511,8 @@ OBA.Popups = (function() {
 							}
 							
 							var lastClass = ((_ === maxObservationsToShow - 1 || _ === mvjs.length - 1) ? " last" : "");
-							html += '<li class="arrival' + lastClass + '">' + timePrediction + '</li>';
+                                                        var mutedClass = (!monitoredVehicleJourney.Monitored) ? " muted" : "";
+							html += '<li class="arrival' + lastClass + mutedClass + '">' + timePrediction + '</li>';
 
 						// distance mode
 						} else {
