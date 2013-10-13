@@ -46,6 +46,9 @@ public class RouteAtStop {
 
   public List<RouteDirection> getDirections() {
     return directions;
-  }  
-
+  }
+  
+  public int getType() {
+    return route.getType();
+  }
 }
