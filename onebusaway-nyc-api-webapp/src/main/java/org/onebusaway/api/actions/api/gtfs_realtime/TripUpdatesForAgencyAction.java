@@ -15,18 +15,21 @@
  */
 package org.onebusaway.api.actions.api.gtfs_realtime;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.onebusaway.transit_data.model.ListBean;
-import org.onebusaway.transit_data.model.RouteBean;
-import org.onebusaway.transit_data.model.StopBean;
 import org.onebusaway.transit_data.model.VehicleStatusBean;
-import org.onebusaway.transit_data.model.trips.TripBean;
-import org.onebusaway.transit_data.model.trips.TripStatusBean;
 
 import com.google.transit.realtime.GtfsRealtime.FeedEntity;
 import com.google.transit.realtime.GtfsRealtime.FeedMessage;
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate;
 import com.google.transit.realtime.GtfsRealtime.VehicleDescriptor;
+
+import uk.org.siri.siri.OnwardCallStructure;
+import uk.org.siri.siri.VehicleActivityStructure;
+import uk.org.siri.siri.VehicleActivityStructure.MonitoredVehicleJourney;
 
 public class TripUpdatesForAgencyAction extends GtfsRealtimeActionSupport {
 
@@ -36,37 +39,51 @@ public class TripUpdatesForAgencyAction extends GtfsRealtimeActionSupport {
   protected void fillFeedMessage(FeedMessage.Builder feed, String agencyId,
       long timestamp) {
 
-    ListBean<VehicleStatusBean> vehicles = _service.getAllVehiclesForAgency(
-        agencyId, timestamp);
-
-    for (VehicleStatusBean vehicle : vehicles.getList()) {
-      TripStatusBean tripStatus = vehicle.getTripStatus();
-      if (tripStatus == null) {
-        continue;
+      int maximumOnwardCalls = Integer.MAX_VALUE;
+      
+      //String gaLabel = "All Vehicles";
+      
+      List<VehicleActivityStructure> activities = new ArrayList<VehicleActivityStructure>();
+      ListBean<VehicleStatusBean> vehicles = _nycTransitDataService.getAllVehiclesForAgency(agencyId, timestamp);
+	
+      for (VehicleStatusBean v : vehicles.getList()) {
+          VehicleActivityStructure activity = _realtimeService.getVehicleActivityForVehicle(v.getVehicleId(), maximumOnwardCalls, timestamp);
+          if (activity != null) {
+              activities.add(activity);
+          }
       }
-      TripBean activeTrip = tripStatus.getActiveTrip();
-      RouteBean route = activeTrip.getRoute();
+    
+    //_monitoringActionSupport.reportToGoogleAnalytics(_request, "Vehicle Monitoring", gaLabel, _configurationService);
 
+    for (VehicleActivityStructure vehicleActivity : activities) {      
+      MonitoredVehicleJourney mvj = vehicleActivity.getMonitoredVehicleJourney();
+        
       FeedEntity.Builder entity = feed.addEntityBuilder();
       entity.setId(Integer.toString(feed.getEntityCount()));
       TripUpdate.Builder tripUpdate = entity.getTripUpdateBuilder();
 
       TripDescriptor.Builder tripDesc = tripUpdate.getTripBuilder();
-      tripDesc.setTripId(normalizeId(activeTrip.getId()));
-      tripDesc.setRouteId(normalizeId(route.getId()));
+      tripDesc.setTripId(normalizeId(mvj.getFramedVehicleJourneyRef().getDatedVehicleJourneyRef()));
+      tripDesc.setStartDate(mvj.getFramedVehicleJourneyRef().getDataFrameRef().getValue().replace("-", ""));
+      tripDesc.setRouteId(normalizeId(mvj.getLineRef().getValue()));
 
       VehicleDescriptor.Builder vehicleDesc = tripUpdate.getVehicleBuilder();
-      vehicleDesc.setId(normalizeId(vehicle.getVehicleId()));
+      vehicleDesc.setId(normalizeId(mvj.getVehicleRef().getValue()));
 
-      StopBean nextStop = tripStatus.getNextStop();
-      if (nextStop != null) {
+      List<OnwardCallStructure> onwardCalls = mvj.getOnwardCalls().getOnwardCall();
+
+      for(OnwardCallStructure call: onwardCalls) {
         TripUpdate.StopTimeUpdate.Builder stopTimeUpdate = tripUpdate.addStopTimeUpdateBuilder();
-        stopTimeUpdate.setStopId(normalizeId(nextStop.getId()));
+        stopTimeUpdate.setStopId(normalizeId(call.getStopPointRef().getValue()));
+        
         TripUpdate.StopTimeEvent.Builder departure = stopTimeUpdate.getDepartureBuilder();
-        departure.setTime(timestamp / 1000 + tripStatus.getNextStopTimeOffset());
+        departure.setTime(call.getExpectedDepartureTime().getTime() / 1000L);
+        
+        TripUpdate.StopTimeEvent.Builder arrival = stopTimeUpdate.getDepartureBuilder();
+        arrival.setTime(call.getExpectedArrivalTime().getTime() / 1000L);
       }
 
-      tripUpdate.setTimestamp(vehicle.getLastUpdateTime() / 1000);
+      tripUpdate.setTimestamp(vehicleActivity.getRecordedAtTime().getTime() / 1000L);
     }
   }
 }

@@ -20,7 +20,9 @@ import java.util.Date;
 import org.apache.struts2.rest.DefaultHttpHeaders;
 import org.onebusaway.api.actions.api.ApiActionSupport;
 import org.onebusaway.exceptions.ServiceException;
-import org.onebusaway.transit_data.services.TransitDataService;
+import org.onebusaway.nyc.presentation.service.realtime.RealtimeService;
+import org.onebusaway.nyc.transit_data.services.NycTransitDataService;
+import org.onebusaway.nyc.util.configuration.ConfigurationService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.transit.realtime.GtfsRealtime.FeedHeader;
@@ -36,7 +38,15 @@ public abstract class GtfsRealtimeActionSupport extends ApiActionSupport {
   private static final int V2 = 2;
 
   @Autowired
-  protected TransitDataService _service;
+  protected NycTransitDataService _nycTransitDataService;
+  
+  @Autowired
+  protected RealtimeService _realtimeService;
+  
+  @Autowired
+  protected ConfigurationService _configurationService;
+  
+  //protected MonitoringActionSupport _monitoringActionSupport = new MonitoringActionSupport(); //FIXME: re-arrange dependencies?
 
   private String _agencyId;
 
@@ -48,8 +58,8 @@ public abstract class GtfsRealtimeActionSupport extends ApiActionSupport {
     super(V2);
   }
   
-  public void setTransitDataService(TransitDataService service) {
-    _service = service;
+  public void setNycTransitDataService(NycTransitDataService service) {
+    _nycTransitDataService = service;
   }
 
   @RequiredFieldValidator
@@ -66,7 +76,7 @@ public abstract class GtfsRealtimeActionSupport extends ApiActionSupport {
     _time = time.getTime();
   }
 
-  public void setRemoveAgencyIsd(boolean removeAgencyIds) {
+  public void setRemoveAgencyIds(boolean removeAgencyIds) {
     _removeAgencyIds = removeAgencyIds;
   }
 

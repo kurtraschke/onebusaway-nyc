@@ -15,9 +15,11 @@
  */
 package org.onebusaway.api.actions.api.gtfs_realtime;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
-import org.onebusaway.transit_data.model.ListBean;
+import org.onebusaway.transit_data.model.RouteBean;
 import org.onebusaway.transit_data.model.service_alerts.NaturalLanguageStringBean;
 import org.onebusaway.transit_data.model.service_alerts.ServiceAlertBean;
 import org.onebusaway.transit_data.model.service_alerts.SituationAffectsBean;
@@ -40,9 +42,15 @@ public class AlertsForAgencyAction extends GtfsRealtimeActionSupport {
   protected void fillFeedMessage(FeedMessage.Builder feed, String agencyId,
       long timestamp) {
 
-    ListBean<ServiceAlertBean> alerts = _service.getAllServiceAlertsForAgencyId(agencyId);
+    Set<ServiceAlertBean> alerts = new HashSet<ServiceAlertBean>();
+    
+    for (RouteBean r: _nycTransitDataService.getRoutesForAgencyId(agencyId).getList()) {
+      alerts.addAll(_realtimeService.getServiceAlertsForRoute(r.getId()));
+    }
+    
+    alerts.addAll(_realtimeService.getServiceAlertsGlobal());
 
-    for (ServiceAlertBean serviceAlert : alerts.getList()) {
+    for (ServiceAlertBean serviceAlert : alerts) {
       FeedEntity.Builder entity = feed.addEntityBuilder();
       entity.setId(Integer.toString(feed.getEntityCount()));
       Alert.Builder alert = entity.getAlertBuilder();

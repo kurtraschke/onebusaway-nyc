@@ -15,19 +15,19 @@
  */
 package org.onebusaway.api.actions.api.gtfs_realtime;
 
-import org.onebusaway.geospatial.model.CoordinatePoint;
+import com.google.transit.realtime.GtfsRealtime;
 import org.onebusaway.transit_data.model.ListBean;
-import org.onebusaway.transit_data.model.RouteBean;
 import org.onebusaway.transit_data.model.VehicleStatusBean;
-import org.onebusaway.transit_data.model.trips.TripBean;
-import org.onebusaway.transit_data.model.trips.TripStatusBean;
 
 import com.google.transit.realtime.GtfsRealtime.FeedEntity;
 import com.google.transit.realtime.GtfsRealtime.FeedMessage;
 import com.google.transit.realtime.GtfsRealtime.Position;
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor;
 import com.google.transit.realtime.GtfsRealtime.VehicleDescriptor;
-import com.google.transit.realtime.GtfsRealtime.VehiclePosition;
+import java.util.ArrayList;
+import java.util.List;
+import uk.org.siri.siri.LocationStructure;
+import uk.org.siri.siri.VehicleActivityStructure;
 
 public class VehiclePositionsForAgencyAction extends GtfsRealtimeActionSupport {
 
@@ -36,36 +36,46 @@ public class VehiclePositionsForAgencyAction extends GtfsRealtimeActionSupport {
   @Override
   protected void fillFeedMessage(FeedMessage.Builder feed, String agencyId,
       long timestamp) {
+      
+      int maximumOnwardCalls = Integer.MAX_VALUE;
+      
+      //String gaLabel = "All Vehicles";
+      
+      List<VehicleActivityStructure> activities = new ArrayList<VehicleActivityStructure>();
+      ListBean<VehicleStatusBean> vehicles = _nycTransitDataService.getAllVehiclesForAgency(agencyId, timestamp);
+	
+      for (VehicleStatusBean v : vehicles.getList()) {
+          VehicleActivityStructure activity = _realtimeService.getVehicleActivityForVehicle(v.getVehicleId(), maximumOnwardCalls, timestamp);
+          if (activity != null) {
+              activities.add(activity);
+          }
+      }
+    
+      //_monitoringActionSupport.reportToGoogleAnalytics(_request, "Vehicle Monitoring", gaLabel, _configurationService);
 
-    ListBean<VehicleStatusBean> vehicles = _service.getAllVehiclesForAgency(
-        agencyId, timestamp);
-
-    for (VehicleStatusBean vehicle : vehicles.getList()) {
-      FeedEntity.Builder entity = feed.addEntityBuilder();
-      entity.setId(Integer.toString(feed.getEntityCount()));
-      VehiclePosition.Builder vehiclePosition = entity.getVehicleBuilder();
-
-      TripStatusBean tripStatus = vehicle.getTripStatus();
-      if (tripStatus != null) {
-        TripBean activeTrip = tripStatus.getActiveTrip();
-        RouteBean route = activeTrip.getRoute();
+      for (VehicleActivityStructure vehicleActivity : activities) {      
+        VehicleActivityStructure.MonitoredVehicleJourney mvj = vehicleActivity.getMonitoredVehicleJourney();
+        
+        FeedEntity.Builder entity = feed.addEntityBuilder();
+        entity.setId(Integer.toString(feed.getEntityCount()));
+        GtfsRealtime.VehiclePosition.Builder vehiclePosition = entity.getVehicleBuilder();
 
         TripDescriptor.Builder tripDesc = vehiclePosition.getTripBuilder();
-        tripDesc.setTripId(normalizeId(activeTrip.getId()));
-        tripDesc.setRouteId(normalizeId(route.getId()));
-      }
+        tripDesc.setTripId(normalizeId(mvj.getFramedVehicleJourneyRef().getDatedVehicleJourneyRef()));
+        tripDesc.setStartDate(mvj.getFramedVehicleJourneyRef().getDataFrameRef().getValue().replace("-", ""));
+        tripDesc.setRouteId(normalizeId(mvj.getLineRef().getValue()));
 
-      VehicleDescriptor.Builder vehicleDesc = vehiclePosition.getVehicleBuilder();
-      vehicleDesc.setId(normalizeId(vehicle.getVehicleId()));
+        VehicleDescriptor.Builder vehicleDesc = vehiclePosition.getVehicleBuilder();
+        vehicleDesc.setId(normalizeId(mvj.getVehicleRef().getValue()));
 
-      CoordinatePoint location = vehicle.getLocation();
-      if (location != null) {
+        LocationStructure location = mvj.getVehicleLocation();
         Position.Builder position = vehiclePosition.getPositionBuilder();
-        position.setLatitude((float) location.getLat());
-        position.setLongitude((float) location.getLon());
-      }
+        position.setLatitude(location.getLatitude().floatValue());
+        position.setLongitude(location.getLongitude().floatValue());
+      
+        position.setBearing(mvj.getBearing());
 
-      vehiclePosition.setTimestamp(vehicle.getLastUpdateTime() / 1000);
-    }
+        vehiclePosition.setTimestamp(vehicleActivity.getRecordedAtTime().getTime() / 1000L);
+      }
   }
 }
