@@ -79,13 +79,17 @@
         </dependency>
         
         <!-- For iPhone app notifications -->
-        <!--
         <dependency>
             <groupId>com.notnoop.apns</groupId>
             <artifactId>apns</artifactId>
             <version>0.1.6</version>
+            <exclusions>
+              <exclusion>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-mapper-asl</artifactId>
+              </exclusion>
+            </exclusions>
         </dependency>
-        -->
         
         <dependency>
             <groupId>org.slf4j</groupId>
