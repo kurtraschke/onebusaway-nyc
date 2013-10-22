@@ -79,12 +79,14 @@
         </dependency>
         
         <!-- For iPhone app notifications -->
+        <!--
         <dependency>
             <groupId>com.notnoop.apns</groupId>
             <artifactId>apns</artifactId>
             <version>0.1.6</version>
         </dependency>
-
+        -->
+        
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>

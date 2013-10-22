@@ -15,17 +15,19 @@
  */
 package org.onebusaway.api.actions.api.gtfs_realtime;
 
-import com.google.transit.realtime.GtfsRealtime;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.onebusaway.transit_data.model.ListBean;
 import org.onebusaway.transit_data.model.VehicleStatusBean;
 
+import com.google.transit.realtime.GtfsRealtime;
 import com.google.transit.realtime.GtfsRealtime.FeedEntity;
 import com.google.transit.realtime.GtfsRealtime.FeedMessage;
 import com.google.transit.realtime.GtfsRealtime.Position;
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor;
 import com.google.transit.realtime.GtfsRealtime.VehicleDescriptor;
-import java.util.ArrayList;
-import java.util.List;
+
 import uk.org.siri.siri.LocationStructure;
 import uk.org.siri.siri.VehicleActivityStructure;
 
