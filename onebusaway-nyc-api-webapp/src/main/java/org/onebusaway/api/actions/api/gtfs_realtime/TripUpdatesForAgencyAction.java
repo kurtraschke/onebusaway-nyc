@@ -1,4 +1,5 @@
 /**
+ * Copyright (C) 2013 Kurt Raschke <kurt@kurtraschke.com>
  * Copyright (C) 2013 Google, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -65,10 +66,12 @@ public class TripUpdatesForAgencyAction extends GtfsRealtimeActionSupport {
       TripDescriptor.Builder tripDesc = tripUpdate.getTripBuilder();
       tripDesc.setTripId(normalizeId(mvj.getFramedVehicleJourneyRef().getDatedVehicleJourneyRef()));
       tripDesc.setStartDate(mvj.getFramedVehicleJourneyRef().getDataFrameRef().getValue().replace("-", ""));
+      tripDesc.setStartTime(getStartTimeForTrip(mvj.getVehicleRef().getValue(), timestamp));
       tripDesc.setRouteId(normalizeId(mvj.getLineRef().getValue()));
 
       VehicleDescriptor.Builder vehicleDesc = tripUpdate.getVehicleBuilder();
       vehicleDesc.setId(normalizeId(mvj.getVehicleRef().getValue()));
+      vehicleDesc.setLabel(removeAgencyId(mvj.getVehicleRef().getValue()));
 
       List<OnwardCallStructure> onwardCalls = mvj.getOnwardCalls().getOnwardCall();
 

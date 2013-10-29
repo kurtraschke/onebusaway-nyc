@@ -1,4 +1,5 @@
 /**
+ * Copyright (C) 2013 Kurt Raschke <kurt@kurtraschke.com>
  * Copyright (C) 2013 Google, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,9 +21,13 @@ import java.util.Date;
 import org.apache.struts2.rest.DefaultHttpHeaders;
 import org.onebusaway.api.actions.api.ApiActionSupport;
 import org.onebusaway.exceptions.ServiceException;
+import org.onebusaway.gtfs.serialization.mappings.StopTimeFieldMappingFactory;
 import org.onebusaway.nyc.presentation.service.realtime.RealtimeService;
 import org.onebusaway.nyc.transit_data.services.NycTransitDataService;
 import org.onebusaway.nyc.util.configuration.ConfigurationService;
+import org.onebusaway.transit_data.model.trips.TripDetailsBean;
+import org.onebusaway.transit_data.model.trips.TripDetailsInclusionBean;
+import org.onebusaway.transit_data.model.trips.TripForVehicleQueryBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.transit.realtime.GtfsRealtime.FeedHeader;
@@ -104,11 +109,29 @@ public abstract class GtfsRealtimeActionSupport extends ApiActionSupport {
 
   protected String normalizeId(String id) {
     if (_removeAgencyIds) {
-      int index = id.indexOf('_');
-      if (index != -1) {
-        id = id.substring(index + 1);
-      }
+      id = removeAgencyId(id);
     }
     return id;
   }
+  
+  protected String removeAgencyId(String id) {
+    int index = id.indexOf('_');
+    if (index != -1) {
+      id = id.substring(index + 1);
+    }
+    return id;
+  }
+  
+  protected String getStartTimeForTrip(String vehicleId, long time) {
+    TripForVehicleQueryBean tfvqb = new TripForVehicleQueryBean();
+    
+    tfvqb.setVehicleId(vehicleId);
+    tfvqb.setTime(new Date(time));
+    tfvqb.setInclusion(new TripDetailsInclusionBean(true, true, false));
+    
+    TripDetailsBean tripDetailsBean = _nycTransitDataService.getTripDetailsForVehicleAndTime(tfvqb);
+    
+    return StopTimeFieldMappingFactory.getSecondsAsString(tripDetailsBean.getSchedule().getStopTimes().get(0).getArrivalTime());
+  }
+  
 }
