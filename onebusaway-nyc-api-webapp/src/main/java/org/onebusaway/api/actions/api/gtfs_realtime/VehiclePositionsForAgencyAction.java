@@ -20,8 +20,15 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.onebusaway.collections.tuple.T2;
+import org.onebusaway.collections.tuple.Tuples;
+import org.onebusaway.nyc.transit_data_federation.siri.SiriExtensionWrapper;
 import org.onebusaway.transit_data.model.ListBean;
+import org.onebusaway.transit_data.model.TripStopTimeBean;
 import org.onebusaway.transit_data.model.VehicleStatusBean;
+import org.onebusaway.transit_data.model.trips.TripDetailsBean;
+import org.onebusaway.transit_data.model.trips.TripDetailsInclusionBean;
+import org.onebusaway.transit_data.model.trips.TripForVehicleQueryBean;
 
 import com.google.transit.realtime.GtfsRealtime;
 import com.google.transit.realtime.GtfsRealtime.FeedEntity;
@@ -30,14 +37,6 @@ import com.google.transit.realtime.GtfsRealtime.Position;
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor;
 import com.google.transit.realtime.GtfsRealtime.VehicleDescriptor;
 import com.google.transit.realtime.GtfsRealtime.VehiclePosition.VehicleStopStatus;
-
-import org.onebusaway.collections.tuple.T2;
-import org.onebusaway.collections.tuple.Tuples;
-import org.onebusaway.nyc.transit_data_federation.siri.SiriExtensionWrapper;
-import org.onebusaway.transit_data.model.TripStopTimeBean;
-import org.onebusaway.transit_data.model.trips.TripDetailsBean;
-import org.onebusaway.transit_data.model.trips.TripDetailsInclusionBean;
-import org.onebusaway.transit_data.model.trips.TripForVehicleQueryBean;
 
 import uk.org.siri.siri.LocationStructure;
 import uk.org.siri.siri.MonitoredCallStructure;
@@ -52,9 +51,6 @@ public class VehiclePositionsForAgencyAction extends GtfsRealtimeActionSupport {
           long timestamp) {
 
     int maximumOnwardCalls = Integer.MAX_VALUE;
-
-    //String gaLabel = "All Vehicles";
-
     List<VehicleActivityStructure> activities = new ArrayList<VehicleActivityStructure>();
     ListBean<VehicleStatusBean> vehicles = _nycTransitDataService.getAllVehiclesForAgency(agencyId, timestamp);
 
@@ -65,13 +61,12 @@ public class VehiclePositionsForAgencyAction extends GtfsRealtimeActionSupport {
       }
     }
 
-    //_monitoringActionSupport.reportToGoogleAnalytics(_request, "Vehicle Monitoring", gaLabel, _configurationService);
-
     for (VehicleActivityStructure vehicleActivity : activities) {
       VehicleActivityStructure.MonitoredVehicleJourney mvj = vehicleActivity.getMonitoredVehicleJourney();
 
       FeedEntity.Builder entity = feed.addEntityBuilder();
-      entity.setId(Integer.toString(feed.getEntityCount()));
+      entity.setId(mvj.getFramedVehicleJourneyRef().getDatedVehicleJourneyRef());
+
       GtfsRealtime.VehiclePosition.Builder vehiclePosition = entity.getVehicleBuilder();
 
       TripDescriptor.Builder tripDesc = vehiclePosition.getTripBuilder();
@@ -90,9 +85,9 @@ public class VehiclePositionsForAgencyAction extends GtfsRealtimeActionSupport {
       position.setLongitude(location.getLongitude().floatValue());
 
       position.setBearing(mvj.getBearing());
-      
+
       T2<Integer, VehicleStopStatus> stopStatusAndSequence = getStopStatusAndSequenceForStop(mvj, timestamp);
-      
+
       vehiclePosition.setCurrentStopSequence(stopStatusAndSequence.getFirst());
       vehiclePosition.setCurrentStatus(stopStatusAndSequence.getSecond());
 
@@ -116,7 +111,7 @@ public class VehiclePositionsForAgencyAction extends GtfsRealtimeActionSupport {
     int visitNumber = mc.getVisitNumber().intValue();
     String stopId = mc.getStopPointRef().getValue();
 
-    for (TripStopTimeBean tripStopTimeBean: tripDetails.getSchedule().getStopTimes()) {
+    for (TripStopTimeBean tripStopTimeBean : tripDetails.getSchedule().getStopTimes()) {
       stopSequence++;
       if (tripStopTimeBean.getStop().getId().equals(stopId)) {
         stopAppearanceCount++;
@@ -127,7 +122,6 @@ public class VehiclePositionsForAgencyAction extends GtfsRealtimeActionSupport {
     }
 
     String presentableDistance = ((SiriExtensionWrapper) mc.getExtensions().getAny()).getDistances().getPresentableDistance();
-
     VehicleStopStatus vss;
 
     if (presentableDistance.equals("at stop")) {

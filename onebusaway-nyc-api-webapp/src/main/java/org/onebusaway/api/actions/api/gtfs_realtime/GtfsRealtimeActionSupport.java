@@ -44,14 +44,12 @@ public abstract class GtfsRealtimeActionSupport extends ApiActionSupport {
 
   @Autowired
   protected NycTransitDataService _nycTransitDataService;
-  
+
   @Autowired
   protected RealtimeService _realtimeService;
-  
+
   @Autowired
   protected ConfigurationService _configurationService;
-  
-  //protected MonitoringActionSupport _monitoringActionSupport = new MonitoringActionSupport(); //FIXME: re-arrange dependencies?
 
   private String _agencyId;
 
@@ -62,7 +60,7 @@ public abstract class GtfsRealtimeActionSupport extends ApiActionSupport {
   public GtfsRealtimeActionSupport() {
     super(V2);
   }
-  
+
   public void setNycTransitDataService(NycTransitDataService service) {
     _nycTransitDataService = service;
   }
@@ -113,7 +111,7 @@ public abstract class GtfsRealtimeActionSupport extends ApiActionSupport {
     }
     return id;
   }
-  
+
   protected String removeAgencyId(String id) {
     int index = id.indexOf('_');
     if (index != -1) {
@@ -121,17 +119,17 @@ public abstract class GtfsRealtimeActionSupport extends ApiActionSupport {
     }
     return id;
   }
-  
+
   protected String getStartTimeForTrip(String vehicleId, long time) {
     TripForVehicleQueryBean tfvqb = new TripForVehicleQueryBean();
-    
+
     tfvqb.setVehicleId(vehicleId);
     tfvqb.setTime(new Date(time));
     tfvqb.setInclusion(new TripDetailsInclusionBean(true, true, false));
-    
+
     TripDetailsBean tripDetailsBean = _nycTransitDataService.getTripDetailsForVehicleAndTime(tfvqb);
-    
+
     return StopTimeFieldMappingFactory.getSecondsAsString(tripDetailsBean.getSchedule().getStopTimes().get(0).getArrivalTime());
   }
-  
+
 }

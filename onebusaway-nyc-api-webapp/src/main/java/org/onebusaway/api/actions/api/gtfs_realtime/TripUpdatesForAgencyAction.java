@@ -38,29 +38,26 @@ public class TripUpdatesForAgencyAction extends GtfsRealtimeActionSupport {
 
   @Override
   protected void fillFeedMessage(FeedMessage.Builder feed, String agencyId,
-      long timestamp) {
+          long timestamp) {
 
-      int maximumOnwardCalls = Integer.MAX_VALUE;
-      
-      //String gaLabel = "All Vehicles";
-      
-      List<VehicleActivityStructure> activities = new ArrayList<VehicleActivityStructure>();
-      ListBean<VehicleStatusBean> vehicles = _nycTransitDataService.getAllVehiclesForAgency(agencyId, timestamp);
-	
-      for (VehicleStatusBean v : vehicles.getList()) {
-          VehicleActivityStructure activity = _realtimeService.getVehicleActivityForVehicle(v.getVehicleId(), maximumOnwardCalls, timestamp);
-          if (activity != null) {
-              activities.add(activity);
-          }
+    int maximumOnwardCalls = Integer.MAX_VALUE;
+
+    List<VehicleActivityStructure> activities = new ArrayList<VehicleActivityStructure>();
+    ListBean<VehicleStatusBean> vehicles = _nycTransitDataService.getAllVehiclesForAgency(agencyId, timestamp);
+
+    for (VehicleStatusBean v : vehicles.getList()) {
+      VehicleActivityStructure activity = _realtimeService.getVehicleActivityForVehicle(v.getVehicleId(), maximumOnwardCalls, timestamp);
+      if (activity != null) {
+        activities.add(activity);
       }
-    
-    //_monitoringActionSupport.reportToGoogleAnalytics(_request, "Vehicle Monitoring", gaLabel, _configurationService);
+    }
 
-    for (VehicleActivityStructure vehicleActivity : activities) {      
+    for (VehicleActivityStructure vehicleActivity : activities) {
       MonitoredVehicleJourney mvj = vehicleActivity.getMonitoredVehicleJourney();
-        
+
       FeedEntity.Builder entity = feed.addEntityBuilder();
-      entity.setId(Integer.toString(feed.getEntityCount()));
+      entity.setId(mvj.getFramedVehicleJourneyRef().getDatedVehicleJourneyRef());
+
       TripUpdate.Builder tripUpdate = entity.getTripUpdateBuilder();
 
       TripDescriptor.Builder tripDesc = tripUpdate.getTripBuilder();
@@ -75,13 +72,13 @@ public class TripUpdatesForAgencyAction extends GtfsRealtimeActionSupport {
 
       List<OnwardCallStructure> onwardCalls = mvj.getOnwardCalls().getOnwardCall();
 
-      for(OnwardCallStructure call: onwardCalls) {
+      for (OnwardCallStructure call : onwardCalls) {
         TripUpdate.StopTimeUpdate.Builder stopTimeUpdate = tripUpdate.addStopTimeUpdateBuilder();
         stopTimeUpdate.setStopId(normalizeId(call.getStopPointRef().getValue()));
-        
+
         TripUpdate.StopTimeEvent.Builder departure = stopTimeUpdate.getDepartureBuilder();
         departure.setTime(call.getExpectedDepartureTime().getTime() / 1000L);
-        
+
         TripUpdate.StopTimeEvent.Builder arrival = stopTimeUpdate.getDepartureBuilder();
         arrival.setTime(call.getExpectedArrivalTime().getTime() / 1000L);
       }
