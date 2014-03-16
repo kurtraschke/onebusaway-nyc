@@ -1,12 +1,12 @@
 /**
  * Copyright (c) 2011 Metropolitan Transportation Authority
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -16,6 +16,7 @@
 package org.onebusaway.nyc.webapp.actions.m;
 
 import java.text.DateFormat;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -27,6 +28,7 @@ import org.onebusaway.geospatial.model.CoordinatePoint;
 import org.onebusaway.nyc.presentation.model.SearchResult;
 import org.onebusaway.nyc.presentation.model.SearchResultCollection;
 import org.onebusaway.nyc.presentation.service.realtime.RealtimeService;
+import org.onebusaway.nyc.presentation.service.routes.RouteComparatorService;
 import org.onebusaway.nyc.presentation.service.search.SearchResultFactory;
 import org.onebusaway.nyc.presentation.service.search.SearchService;
 import org.onebusaway.nyc.transit_data.services.NycTransitDataService;
@@ -55,6 +57,9 @@ public class IndexAction extends OneBusAwayNYCActionSupport {
 
   @Autowired
   private SearchService _searchService;
+
+  @Autowired
+  private RouteComparatorService _routeComparatorService;
 
   private SearchResultCollection _results = new SearchResultCollection();
 
@@ -147,7 +152,7 @@ public class IndexAction extends OneBusAwayNYCActionSupport {
 	  return _configurationService.getConfigurationValueAsString(
               "display.googleAnalyticsSiteId", null);
   }
-  
+
   public String getGoogleAnalyticsValue() {
       // event tracking
       String label = getQ();
@@ -159,7 +164,7 @@ public class IndexAction extends OneBusAwayNYCActionSupport {
       label = label.trim();
       return label;
   }
-  
+
   public String getGoogleAnalyticsLabel() {
       String action = "Unknown";
       if (_results != null && !_results.isEmpty()) {
@@ -256,7 +261,13 @@ public class IndexAction extends OneBusAwayNYCActionSupport {
     return uniqueServiceAlerts;
   }
 
+  @SuppressWarnings("unchecked")
   public SearchResultCollection getResults() {
+    if (_results.getResultType().startsWith("Route")) {
+      Collections.sort(_results.getMatches(), _routeComparatorService);
+      Collections.sort(_results.getSuggestions(), _routeComparatorService);
+    }
+
     return _results;
   }
 

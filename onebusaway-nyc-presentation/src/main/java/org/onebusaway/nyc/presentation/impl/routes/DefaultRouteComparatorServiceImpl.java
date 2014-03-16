@@ -18,36 +18,21 @@ package org.onebusaway.nyc.presentation.impl.routes;
 
 import org.onebusaway.collections.PropertyPathExpression;
 import org.onebusaway.nyc.presentation.service.routes.RouteComparatorService;
-import org.onebusaway.transit_data.model.RouteBean;
 
-import java.util.ArrayList;
 import java.util.List;
 
-public class LexicographicRouteComparatorServiceImpl implements
+public class DefaultRouteComparatorServiceImpl implements
     RouteComparatorService {
+  private List<String> _fieldsToCompare;
 
-  private List<String> fieldsToCompare = new ArrayList<String>();
-
-  public LexicographicRouteComparatorServiceImpl() {
-
-  }
-
-  public LexicographicRouteComparatorServiceImpl(List<String> fieldsToCompare) {
-    this.fieldsToCompare.addAll(fieldsToCompare);
-  }
-
-  public List<String> getFieldsToCompare() {
-    return fieldsToCompare;
-  }
-
-  public void setFieldsToCompare(List<String> fieldsToCompare) {
-    this.fieldsToCompare = fieldsToCompare;
+  public DefaultRouteComparatorServiceImpl(List<String> fieldsToCompare) {
+    _fieldsToCompare = fieldsToCompare;
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
   @Override
-  public int compare(RouteBean a, RouteBean b) {
-    for (String fieldName : fieldsToCompare) {
+  public int compare(Object a, Object b) {
+    for (String fieldName : _fieldsToCompare) {
 
       Comparable valueA = (Comparable) PropertyPathExpression.evaluate(a,
           fieldName);

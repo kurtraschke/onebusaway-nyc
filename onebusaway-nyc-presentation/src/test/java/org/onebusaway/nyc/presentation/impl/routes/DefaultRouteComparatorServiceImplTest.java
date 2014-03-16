@@ -31,7 +31,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-public class LexicographicRouteComparatorServiceImplTest {
+public class DefaultRouteComparatorServiceImplTest {
 
   private List<RouteBean> testRoutes = new ArrayList<RouteBean>();
 
@@ -64,9 +64,10 @@ public class LexicographicRouteComparatorServiceImplTest {
     testRoutes = Collections.unmodifiableList(testRoutes);
   }
 
+  @SuppressWarnings({"rawtypes", "unchecked"})
   @Test
   public void testSortById() {
-    Comparator<RouteBean> c = new LexicographicRouteComparatorServiceImpl(
+    Comparator c = new DefaultRouteComparatorServiceImpl(
         Collections.singletonList("id"));
 
     List<RouteBean> shuffledRoutes = new ArrayList<RouteBean>(testRoutes);
@@ -79,9 +80,10 @@ public class LexicographicRouteComparatorServiceImplTest {
         MappingLibrary.map(shuffledRoutes, "id").toArray(new String[] {}));
   }
 
+  @SuppressWarnings({"rawtypes", "unchecked"})
   @Test
   public void testSortByLongAndShortName() {
-    Comparator<RouteBean> c = new LexicographicRouteComparatorServiceImpl(
+    Comparator c = new DefaultRouteComparatorServiceImpl(
         Lists.newArrayList("longName", "shortName"));
 
     List<RouteBean> shuffledRoutes = new ArrayList<RouteBean>(testRoutes);

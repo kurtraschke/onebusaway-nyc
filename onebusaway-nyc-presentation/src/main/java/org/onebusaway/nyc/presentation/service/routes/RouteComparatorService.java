@@ -16,12 +16,9 @@
 
 package org.onebusaway.nyc.presentation.service.routes;
 
-import org.onebusaway.transit_data.model.RouteBean;
-
 import java.util.Comparator;
 
-public interface RouteComparatorService extends Comparator<RouteBean> {
-
-  public int compare(RouteBean a, RouteBean b);
-
+@SuppressWarnings("rawtypes")
+public interface RouteComparatorService extends Comparator {
+  public int compare(Object a, Object b);
 }

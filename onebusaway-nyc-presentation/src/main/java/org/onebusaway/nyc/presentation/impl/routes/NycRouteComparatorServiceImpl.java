@@ -16,8 +16,8 @@
 
 package org.onebusaway.nyc.presentation.impl.routes;
 
+import org.onebusaway.collections.PropertyPathExpression;
 import org.onebusaway.nyc.presentation.service.routes.RouteComparatorService;
-import org.onebusaway.transit_data.model.RouteBean;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -25,9 +25,9 @@ import java.util.regex.Pattern;
 public class NycRouteComparatorServiceImpl implements RouteComparatorService {
 
   /**
-   * This pattern is derived from observed route names rather than any
-   * official naming convention - that is, it is possible that
-   * new route names will require it to be updated.
+   * This pattern is derived from observed route names rather than any official
+   * naming convention - that is, it is possible that new route names will
+   * require it to be updated.
    */
   private final static Pattern NYC_ROUTE_PATTERN = Pattern.compile("^([A-Za-z]{1,3})([0-9]{1,3})([A-Z]?)((?:-SBS)?)$");
 
@@ -37,11 +37,13 @@ public class NycRouteComparatorServiceImpl implements RouteComparatorService {
   private final static int SBS_SUFFIX_GROUP = 4;
 
   @Override
-  public int compare(RouteBean a, RouteBean b) {
+  public int compare(Object a, Object b) {
+    String aShortName = (String) PropertyPathExpression.evaluate(a, "shortName");
+    String bShortName = (String) PropertyPathExpression.evaluate(b, "shortName");
 
-    if (a.getShortName() != null && b.getShortName() != null) {
-      Matcher matcherA = NYC_ROUTE_PATTERN.matcher(a.getShortName());
-      Matcher matcherB = NYC_ROUTE_PATTERN.matcher(b.getShortName());
+    if (aShortName != null && bShortName != null) {
+      Matcher matcherA = NYC_ROUTE_PATTERN.matcher(aShortName);
+      Matcher matcherB = NYC_ROUTE_PATTERN.matcher(bShortName);
 
       if (matcherA.matches() && matcherB.matches()) {
 
@@ -71,8 +73,9 @@ public class NycRouteComparatorServiceImpl implements RouteComparatorService {
     }
   }
 
-  public int fallbackCompare(RouteBean a, RouteBean b) {
-    return a.getId().compareTo(b.getId());
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  public int fallbackCompare(Object a, Object b) {
+    return ((Comparable) a).compareTo((Comparable) b);
   }
 
   private <T> T safe(T a, T b) {

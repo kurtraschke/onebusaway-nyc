@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013 Kurt Raschke
+ * Copyright (c) 2014 Kurt Raschke
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+
+import org.onebusaway.nyc.presentation.service.routes.RouteComparatorService;
 import org.onebusaway.nyc.presentation.service.routes.RouteListService;
 import org.onebusaway.nyc.transit_data.services.NycTransitDataService;
 import org.onebusaway.nyc.util.configuration.ConfigurationService;
@@ -38,6 +40,8 @@ public class RouteListServiceImpl implements RouteListService {
     private ConfigurationService _configurationService;
     @Autowired
     private NycTransitDataService _nycTransitDataService;
+    @Autowired
+    private RouteComparatorService _routeComparatorService;
 
     @Override
     public boolean getShowAgencyNames() {
@@ -49,6 +53,7 @@ public class RouteListServiceImpl implements RouteListService {
         return Boolean.parseBoolean(_configurationService.getConfigurationValueAsString("display.useAgencyId", "false"));
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public List<RouteBean> getRoutes() {
         List<RouteBean> allRoutes = new ArrayList<RouteBean>();
@@ -59,36 +64,8 @@ public class RouteListServiceImpl implements RouteListService {
             allRoutes.addAll(_nycTransitDataService.getRoutesForAgencyId(agency.getAgency().getId()).getList());
         }
 
-        Collections.sort(allRoutes, (getShowAgencyNames() ? new AgencyAndRouteComparator() : new RouteComparator()));
+        Collections.sort(allRoutes, _routeComparatorService);
 
         return allRoutes;
-    }
-
-    public class AgencyAndRouteComparator implements Comparator<RouteBean> {
-
-        @Override
-        public int compare(RouteBean t, RouteBean t1) {
-            if (t.getAgency().getName().compareTo(t1.getAgency().getName()) == 0) {
-                if (t.getShortName() != null && t1.getShortName() != null) {
-                    return t.getShortName().compareTo(t1.getShortName());
-                } else {
-                    return t.getId().compareTo(t1.getId());
-                }
-            } else {
-                return t.getAgency().getName().compareTo(t1.getAgency().getName());
-            }
-        }
-    }
-
-    public class RouteComparator implements Comparator<RouteBean> {
-
-        @Override
-        public int compare(RouteBean t, RouteBean t1) {
-            if (t.getShortName() != null && t1.getShortName() != null) {
-                return t.getShortName().compareTo(t1.getShortName());
-            } else {
-                return t.getId().compareTo(t1.getId());
-            }
-        }
     }
 }
